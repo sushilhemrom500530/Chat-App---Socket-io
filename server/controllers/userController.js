@@ -30,6 +30,21 @@ const getAllUser = async (req, res) => {
   }
 };
 
+// Get single user (for admin/debug/testing)
+const findByUser = async (req, res) => {
+  const {userId} =req.params;
+  try {
+    const result = await User.findById(userId).select("-password"); 
+    res.status(200).json({
+      message: "User fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Fetch Users Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 // User login
 const loginUser = async (req, res) => {
   try {
@@ -81,7 +96,6 @@ const registerUser = async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required." });
     }
-
     if (!validator.isEmail(email)) {
       return res.status(400).json({ message: "Invalid email format." });
     }
@@ -135,4 +149,5 @@ export const userController = {
   registerUser,
   loginUser,
   getAllUser,
+  findByUser
 };
