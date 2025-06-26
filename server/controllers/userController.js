@@ -1,9 +1,16 @@
 import User from "../modules/userModel.js";
 import bcrypt from "bcrypt";
 import validator from "validator";
+import jwt from "jsonwebtoken";
 
 // Optional: config
 const SALT_ROUNDS = 10;
+
+const createToken = (_id)=>{
+    const jwtToken = process.env.JWT_SECRET_KEY;
+
+    return jwt.sign({_id},jwtToken, {expiresIn:"7d"})
+}
 
 const registerUser = async (req, res) => {
   try {
@@ -47,6 +54,7 @@ const registerUser = async (req, res) => {
     };
 
     const result = await User.create(userData);
+    const token = createToken(result?._id)
 
     res.status(201).json({
       message: "User registered successfully!",
@@ -55,6 +63,7 @@ const registerUser = async (req, res) => {
         name: result.name,
         email: result.email,
         createdAt: result.createdAt,
+        token
       },
     });
   } catch (error) {
