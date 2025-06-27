@@ -1,9 +1,20 @@
-import Image from "next/image";
+'use client';
+import ChatContainer from "@/components/chat-container";
+import RightSidebar from "@/components/right-sidebar";
+import Sidebar from "@/components/sidebar";
+import { useState } from "react";
 
 export default function Home() {
+  const [selectedUser,setSelectedUser] = useState('')
   return (
-    <div className="">
-      <h1 className="text-center text-3xl font-bold py-2">Hellow World!</h1>
+    <div className="container">
+     <div className={`backdrop-blur-xl border-2 border-white/60 rounded-2xl h-[100%] overflow-hidden grid grid-cols-1 relative ${selectedUser ? "md:grid-cols-[1fr_1.5fr_1fr] xl:grid-cols-[1fr_2fr_1fr]" : "md:grid-cols-2"} `}>
+      <Sidebar />
+      <ChatContainer />
+    {
+      !selectedUser &&   <RightSidebar />
+    }
+      </div>
     </div>
   );
 }

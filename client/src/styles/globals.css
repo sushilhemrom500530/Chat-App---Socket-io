@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import "tailwindcss";
+
+
+* {
+  font-family:"Outfit", sans-serif;
+}
+
+body{
+  background: url('../assets/bgImage.svg');
+  background-repeat: no-repeat;
+  background-size: contain;
+  width: 100%;
+  height: 100vh;
+  background-color: black;
+}
+
+.container {
+  @apply container mx-auto w-full h-screen sm:py-[5%] sm:px-[15%]
+}
+/* ::-webkit-scrollbar{
+  display: none;
+} */
