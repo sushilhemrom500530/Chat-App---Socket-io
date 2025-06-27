@@ -10,9 +10,9 @@ export default function Home() {
   return (
     <div className="container">
      <div className={`backdrop-blur-xl border-2 border-white/60 rounded-2xl h-[100%] overflow-hidden grid grid-cols-1 relative ${selectedUser ? "md:grid-cols-[1fr_1.5fr_1fr] xl:grid-cols-[1fr_2fr_1fr]" : " grid md:grid-cols-2"} `}>
-      <Sidebar />
-      <ChatContainer />
-      <RightSidebar />
+      <Sidebar selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
+      <ChatContainer selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
+      <RightSidebar selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
       </div>
     </div>
   );

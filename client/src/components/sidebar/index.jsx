@@ -41,7 +41,7 @@ export default function Sidebar({ selectedUser, setSelectedUser }) {
       <div className="h-[57vh] overflow-y-auto flex flex-col gap-2.5">
         {userDummyData?.map((user, idx) => {
           return (
-            <div className="flex items-center gap-2.5" key={idx}>
+            <div onClick={()=>{setSelectedUser(user)}} className={`flex items-center gap-2.5 hover:bg-[#282142]/50 px-2 py-1 rounded-md cursor-pointer relative ${selectedUser?._id === user?._id && "bg-[#282142]/50"}`} key={idx}>
               <div className="relative">
                 <Image
                   src={user?.profilePic || assets?.avatar_icon}
@@ -63,6 +63,9 @@ export default function Sidebar({ selectedUser, setSelectedUser }) {
                   <p className="text-xs">&nbsp;</p> 
                 )}
               </div>
+              {
+                idx > 2 && <p className="absolute top-4 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-violet-500/50">{idx}</p>
+              }
             </div>
           );
         })}
