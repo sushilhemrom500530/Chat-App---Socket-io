@@ -19,7 +19,7 @@ const createToken = (_id) => {
 // Get all users (for admin/debug/testing)
 const getAllUser = async (req, res) => {
   try {
-    const result = await User.find().select("-password"); 
+    const result = await User.find().select("-password -updatedAt"); 
     res.status(200).json({
       message: "Users fetched successfully",
       data: result,
@@ -91,9 +91,10 @@ const loginUser = async (req, res) => {
 // User registration
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { fullName, email, password,bio } = req.body;
+    console.log(req.body);
 
-    if (!name || !email || !password) {
+    if (!fullName || !email || !password || !bio) {
       return res.status(400).json({ message: "All fields are required." });
     }
     if (!validator.isEmail(email)) {
@@ -122,9 +123,10 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
     const newUser = await User.create({
-      name,
+      fullName,
       email,
       password: hashedPassword,
+      bio
     });
 
     const token = createToken(newUser._id);
@@ -132,10 +134,11 @@ const registerUser = async (req, res) => {
     res.status(201).json({
       message: "User registered successfully!",
       user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        createdAt: newUser.createdAt,
+        id: newUser?._id,
+        fullName: newUser?.fullName,
+        email: newUser?.email,
+        bio:newUser?.bio,
+        createdAt: newUser?.createdAt,
         token,
       },
     });
