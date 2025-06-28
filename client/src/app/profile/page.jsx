@@ -1,8 +1,10 @@
 "use client";
 import assets from "@/assets/assets";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [profileData, setProfileData] = useState({
     name: "Sushil Hemrom",
     bio: "as a simple boy",
@@ -37,6 +39,7 @@ export default function ProfilePage() {
       return;
     }
     console.log({ profileData });
+    router.push("/")
   };
 
   return (
@@ -62,7 +65,7 @@ export default function ProfilePage() {
             <img
               src={profileData.profile || assets?.avatar_icon.src}
               alt="avatar_icon"
-              className="w-12 h-12 rounded"
+              className="w-12 h-12 rounded-full"
             />
             upload profile image
           </label>

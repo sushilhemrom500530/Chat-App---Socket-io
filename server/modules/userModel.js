@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
+    fullName: {
       type: String,
       required: true,
       trim: true
@@ -17,7 +17,15 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true
-    }
+    },
+    profilePic: {
+      type: String,
+      required: true
+    },
+    bio: {
+      type: String,
+      required: true
+    },
   },
   {
     timestamps: true // adds createdAt and updatedAt
