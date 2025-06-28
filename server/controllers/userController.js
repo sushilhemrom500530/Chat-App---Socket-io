@@ -2,6 +2,7 @@ import User from "../modules/userModel.js";
 import bcrypt from "bcrypt";
 import validator from "validator";
 import jwt from "jsonwebtoken";
+import { fileUploader } from "../helpers/fileUploader.js";
 
 const SALT_ROUNDS = 10;
 
@@ -19,7 +20,7 @@ const createToken = (_id) => {
 // Get all users (for admin/debug/testing)
 const getAllUser = async (req, res) => {
   try {
-    const result = await User.find().select("-password -updatedAt"); 
+    const result = await User.find().select("-password -updatedAt");
     res.status(200).json({
       message: "Users fetched successfully",
       data: result,
@@ -32,9 +33,9 @@ const getAllUser = async (req, res) => {
 
 // Get single user (for admin/debug/testing)
 const findByUser = async (req, res) => {
-  const {userId} =req.params;
+  const { userId } = req.params;
   try {
-    const result = await User.findById(userId).select("-password"); 
+    const result = await User.findById(userId).select("-password");
     res.status(200).json({
       message: "User fetched successfully",
       data: result,
@@ -45,6 +46,53 @@ const findByUser = async (req, res) => {
   }
 };
 
+
+const updateUser = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Parse JSON string from `data` field
+    const { fullName, bio } = JSON.parse(req.body.data || "{}");
+
+    let profilePic = undefined;
+
+    // If file is uploaded, upload to Cloudinary
+    if (req.file) {
+      const cloudResult = await fileUploader.uploadToCloudinary(req.file);
+      profilePic = cloudResult.secure_url;
+    }
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found!" });
+    }
+
+    const updateData = {
+      ...(fullName && { fullName }),
+      ...(bio && { bio }),
+      ...(profilePic && { profilePic }),
+    };
+
+    console.log({updateData});
+
+    const result = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "User updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Update User Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
 // User login
 const loginUser = async (req, res) => {
   try {
@@ -52,7 +100,9 @@ const loginUser = async (req, res) => {
 
     // Validate inputs
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required." });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required." });
     }
     if (!validator.isEmail(email)) {
       return res.status(400).json({ message: "Invalid email format." });
@@ -91,7 +141,7 @@ const loginUser = async (req, res) => {
 // User registration
 const registerUser = async (req, res) => {
   try {
-    const { fullName, email, password,bio } = req.body;
+    const { fullName, email, password, bio } = req.body;
     console.log(req.body);
 
     if (!fullName || !email || !password || !bio) {
@@ -126,7 +176,7 @@ const registerUser = async (req, res) => {
       fullName,
       email,
       password: hashedPassword,
-      bio
+      bio,
     });
 
     const token = createToken(newUser._id);
@@ -137,7 +187,7 @@ const registerUser = async (req, res) => {
         id: newUser?._id,
         fullName: newUser?.fullName,
         email: newUser?.email,
-        bio:newUser?.bio,
+        bio: newUser?.bio,
         createdAt: newUser?.createdAt,
         token,
       },
@@ -152,5 +202,6 @@ export const userController = {
   registerUser,
   loginUser,
   getAllUser,
-  findByUser
+  findByUser,
+  updateUser,
 };
