@@ -28,7 +28,7 @@ export default function ChatContainer({ selectedUser, setSelectedUser }) {
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-1 border-white rounded-full"></span>
           </div>
           <div className="text-white">
-            <p>Sushil Hemrom</p>
+            <p>{selectedUser?.fullName ||'Sushil Hemrom'}</p>
             <p className="text-xs">Active Now</p>
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function ChatContainer({ selectedUser, setSelectedUser }) {
       <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3">
         <div className="flex-1 flex items-center gap-2 rounded-full px-3 bg-gray-100/12">
             <input type="text" placeholder="Send a message" className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400" />
-            <input type="file" id="image" accept="image/jpg, image/png, /image/jpeg" hidden />
+            <input type="file" id="image" accept="image/*" hidden />
             <label htmlFor="image">
                 <Image src={assets.gallery_icon} alt="gallery-icon" className="cursor-pointer mr-2 w-5" />
             </label>
