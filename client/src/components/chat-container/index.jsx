@@ -1,11 +1,18 @@
 import assets, { messagesDummyData } from "@/assets/assets";
 import { dateFormatter } from "@/utils/date.formatter";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export default function ChatContainer({ selectedUser, setSelectedUser }) {
   const [isUser, setIsUser] = useState(true);
-  const [isReplyUser, setIsReplyUser] = useState(true);
+  
+  const scrollEnd = useRef();
+
+  useEffect(()=>{
+    if(scrollEnd.current){
+        scrollEnd.current.scrollIntoView({behavior:"smooth"})
+    }
+  },[])
 
   return selectedUser ? (
     <div className="h-full overflow-auto backdrop-blur-lg relative">
@@ -84,6 +91,18 @@ export default function ChatContainer({ selectedUser, setSelectedUser }) {
             </div>
           </div>
         ))}
+        <div ref={scrollEnd}></div>
+      </div>
+      {/* ----------- bottom area ------------- */}
+      <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3">
+        <div className="flex-1 flex items-center gap-2 rounded-full px-3 bg-gray-100/12">
+            <input type="text" placeholder="Send a message" className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400" />
+            <input type="file" id="image" accept="image/jpg, image/png, /image/jpeg" hidden />
+            <label htmlFor="image">
+                <Image src={assets.gallery_icon} alt="gallery-icon" className="cursor-pointer mr-2 w-5" />
+            </label>
+        </div>
+        <Image src={assets.send_button} alt="send_icon" className="w-7 cursor-pointer" />
       </div>
     </div>
   ) : (
