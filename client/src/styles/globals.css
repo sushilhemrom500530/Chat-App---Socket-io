@@ -18,6 +18,6 @@ body{
 .container {
   @apply container mx-auto w-full h-screen sm:py-[5%] sm:px-[15%]
 }
-/* ::-webkit-scrollbar{
+::-webkit-scrollbar{
   display: none;
-} */
+}
