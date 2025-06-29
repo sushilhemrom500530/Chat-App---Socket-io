@@ -1,46 +1,59 @@
 "use client";
 import assets from "@/assets/assets";
+import { AuthContext } from "@/context-api/authContext";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useContext, useState } from "react";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [profileData, setProfileData] = useState({
-    name: "Sushil Hemrom",
-    bio: "as a simple boy",
-    profile: "",
-  });
+
+const [profileData, setProfileData] = useState({
+  name: "Sushil Hemrom",
+  bio: "as a simple boy",
+  profile: "",      
+  imageFile: null,  
+});
+
 
   const [error, setError] = useState(""); // For image validation message
+  const {updateProfile} = useContext(AuthContext);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const imageURL = URL.createObjectURL(file);
-      const img = new Image();
-      img.src = imageURL;
+const handleImageChange = (e) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    const imageURL = URL.createObjectURL(file);
+    const img = new Image();
+    img.src = imageURL;
 
-      img.onload = () => {
-        if (img.width < 100 || img.height < 100) {
-          setError("Image is too small. Minimum size is 100x100 pixels.");
-          setProfileData({ ...profileData, profile: "" });
-        } else {
-          setError("");
-          setProfileData({ ...profileData, profile: imageURL });
-        }
-      };
-    }
+    img.onload = () => {
+      if (img.width < 100 || img.height < 100) {
+        setError("Image is too small. Minimum size is 100x100 pixels.");
+        setProfileData({ ...profileData, profile: "", imageFile: null });
+      } else {
+        setError("");
+        setProfileData({ ...profileData, profile: imageURL, imageFile: file });
+      }
+    };
+  }
+};
+
+
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (error) {
+    alert("Please fix the image error before submitting.");
+    return;
+  }
+
+  const formValues = {
+    name: profileData.name,
+    bio: profileData.bio,
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (error) {
-      alert("Please fix the image error before submitting.");
-      return;
-    }
-    console.log({ profileData });
-    router.push("/")
-  };
+  await updateProfile(formValues, profileData.imageFile);
+};
+
 
   return (
     <div className="min-h-screen bg-cover bg-no-repeat flex items-center justify-center">
