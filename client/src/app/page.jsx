@@ -3,7 +3,6 @@ import ChatContainer from "@/components/chat-container";
 import RightSidebar from "@/components/right-sidebar";
 import Sidebar from "@/components/sidebar";
 import { useState } from "react";
-import { Toaster } from "react-hot-toast";
 
 export default function Home() {
   const [selectedUser,setSelectedUser] = useState();
@@ -14,7 +13,6 @@ export default function Home() {
       <ChatContainer selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
       <RightSidebar selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
       </div>
-      <Toaster />
     </div>
   );
 }

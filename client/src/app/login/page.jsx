@@ -1,13 +1,15 @@
 "use client";
 import assets from "@/assets/assets";
+import { AuthContext } from "@/context-api/authContext";
 import Image from "next/image";
-import { useState } from "react";
+import { useContext, useState } from "react";
 
 export default function LoginPage() {
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [setBio, setSetBio] = useState(false);
   const [isLogin, setIsLogin] = useState("register");
+  const {login} = useContext(AuthContext);
   const [loginUser, setLoginUser] = useState({
     email: "",
     password: "",
@@ -19,16 +21,14 @@ export default function LoginPage() {
     bio: "",
   });
 
-  const handleLogin = (e) => {
-    setIsLoading(true);
-    setSubmitted(true);
+  const handleSubmit =async (e) => {
     e.preventDefault();
-    console.log({ loginUser });
-  };
-  const handleRegister = (e) => {
     setSetBio(true);
-    e.preventDefault();
-    console.log({ regiUser });
+    if(regiUser?.bio?.length > 0 || loginUser?.password ){
+      // console.log({ regiUser });
+      await login(isLogin ==="register" ? "register" : "login" ,isLogin ==="register" ? regiUser : loginUser)
+      setIsLogin("login")
+    }
   };
 
   return (
@@ -39,7 +39,7 @@ export default function LoginPage() {
       <div>
         {isLogin === "register" ? (
           <form
-            onSubmit={handleRegister}
+            onSubmit={handleSubmit}
             className="border-2 bg-white/8 text-white border-gray-500 p-6 flex flex-col gap-6 rounded-lg shadow-lg"
           >
             <div className="flex items-center justify-between">
@@ -60,6 +60,7 @@ export default function LoginPage() {
                 <textarea
                   name="bio"
                   id="bio"
+                  required
                   value={regiUser.bio}
                   onChange={(e) =>
                     setRegiUser({ ...regiUser, bio: e.target.value })
@@ -134,7 +135,7 @@ export default function LoginPage() {
           </form>
         ) : (
           <form
-            onSubmit={handleLogin}
+            onSubmit={handleSubmit}
             className="border-2 bg-white/8 text-white border-gray-500 p-6 flex flex-col gap-6 rounded-lg shadow-lg"
           >
             <h2 className="font-medium text-2xl flex justify-between items-center">
@@ -165,7 +166,6 @@ export default function LoginPage() {
             />
 
             <button
-              disabled={submitted}
               type="submit"
               className={`py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md ${
                 !submitted ? " cursor-pointer" : ""

@@ -47,10 +47,10 @@ const handleImageChange = (e) => {
   }
 
   const formValues = {
-    name: profileData.name,
+    fullName: profileData.name,
     bio: profileData.bio,
   };
-
+console.log({formValues});
   await updateProfile(formValues, profileData.imageFile);
 };
 

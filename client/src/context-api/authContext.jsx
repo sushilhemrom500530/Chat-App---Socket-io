@@ -1,9 +1,11 @@
 "use client";
 import { modifyPayload } from "@/utils/formData";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import { createContext, useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
+import Cookies from "js-cookie"; 
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 axios.defaults.baseURL = baseUrl;
@@ -11,22 +13,23 @@ axios.defaults.baseURL = baseUrl;
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const router = useRouter();
   const [token, setToken] = useState("");
   const [authUser, setAuthUser] = useState(null);
   const [onlineUser, setOnlineUser] = useState([]);
   const [socket, setSocket] = useState(null);
 
-  // Logout function needs to be wrapped with useCallback to avoid re-creation on every render
+  // logout
   const logout = useCallback(async () => {
-    localStorage.removeItem("token");
+    Cookies.remove("token"); 
     setToken("");
     setAuthUser(null);
     setOnlineUser([]);
     axios.defaults.headers.common["token"] = null;
     toast.success("Logout successfully");
+    router.push("/login");
     if (socket) socket.disconnect();
   }, [socket]);
-
 
   // check auth
   const checkAuth = async () => {
@@ -37,44 +40,50 @@ export const AuthProvider = ({ children }) => {
         connectSocket(data.user);
       }
     } catch (error) {
-      toast.error(error?.message || "User not found!");
-    } 
+      toast.error(error?.response?.data?.message || "User not found!");
+    }
   };
 
-  // login function
+  // login
   const login = async (state, credentials) => {
     try {
-      const { data } = await axios.post(`/user/login${state}`, credentials);
-      if (data?.userData) {
-        setAuthUser(data.userData);
-        connectSocket(data.userData);
+      const { data } = await axios.post(`/user/${state}`, credentials);
+      if (data?.user) {
+        setAuthUser(data.user);
+        connectSocket(data.user);
         axios.defaults.headers.common["token"] = data.token;
         setToken(data.token);
 
-        localStorage.setItem("token", data.token);
+        Cookies.set("token", data?.user?.token); 
         toast.success(data.message || "Login successfully");
+        router.push("/");
       } else {
         toast.error(data.message || "Something went wrong!");
       }
     } catch (error) {
-      toast.error(error?.message || "Something went wrong!");
+      toast.error(error?.response?.data?.message || "Something went wrong!");
     }
   };
 
   // update profile
   const updateProfile = async (formValues, imageFile) => {
-    const profileData = modifyPayload({formValues,file:imageFile});
+    const profileData = modifyPayload({ formValues, file: imageFile });
     try {
-      const { data } = await axios.put(`/user/68600f7e1e9585dee6d124c5`, profileData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const { data } = await axios.put(
+        `/user/68600f7e1e9585dee6d124c5`,
+        profileData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
       if (data?.success) {
         setAuthUser(data.user);
         toast.success(data.message || "Profile updated successfully");
+        router.push("/");
       }
     } catch (error) {
-      toast.error(error?.message || "Error updating profile");
+      toast.error(error?.response?.data?.message || "Error updating profile");
     }
   };
 
@@ -92,10 +101,12 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
-  // on mount read token
-   useEffect(() => {
-    if(token){
-        axios.defaults.headers.common["token"] = token;
+  // on mount
+  useEffect(() => {
+    const storedToken = Cookies.get("token"); // ✅ changed
+    if (storedToken) {
+      axios.defaults.headers.common["token"] = storedToken;
+      setToken(storedToken);
     }
     checkAuth();
   }, []);

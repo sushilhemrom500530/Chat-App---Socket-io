@@ -54,14 +54,12 @@ const updateUser = async (req, res) => {
 
   try {
     // Parse JSON string from `data` field
-    const { fullName, bio } = JSON.parse(req.body.data || "{}");
-
-    let profilePic = undefined;
+    const {formValues} = JSON.parse(req.body.data || "{}");
 
     // If file is uploaded, upload to Cloudinary
     if (req.file) {
-      const cloudResult = await fileUploader.uploadToCloudinary(req.file);
-      profilePic = cloudResult.secure_url;
+      const cloudResult = await fileUploader.uploadToCloudinary(req.file)
+      Object.assign(formValues,{profilePic: cloudResult.secure_url})
     }
 
     // Find user
@@ -70,17 +68,11 @@ const updateUser = async (req, res) => {
       return res.status(404).json({success:false, message: "User not found!" });
     }
 
-    const updateData = {
-      ...(fullName && { fullName }),
-      ...(bio && { bio }),
-      ...(profilePic && { profilePic }),
-    };
-
-    // console.log({updateData});
+    // console.log(formValues);
 
     const result = await User.findByIdAndUpdate(
       userId,
-      { $set: updateData },
+      { $set: formValues },
       { new: true }
     );
 
@@ -129,7 +121,7 @@ const loginUser = async (req, res) => {
     res.status(200).json({
       success:true,
       message: "Login successful",
-      data: {
+      user: {
         id: user._id,
         name: user.name,
         email: user.email,
@@ -146,8 +138,7 @@ const loginUser = async (req, res) => {
 const registerUser = async (req, res) => {
   try {
     const { fullName, email, password, bio } = req.body;
-    console.log(req.body);
-
+    // console.log(fullName ,email,password ,bio);
     if (!fullName || !email || !password || !bio) {
       return res.status(400).json({ message: "All fields are required." });
     }
