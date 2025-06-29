@@ -22,12 +22,13 @@ const getAllUser = async (req, res) => {
   try {
     const result = await User.find().select("-password -updatedAt");
     res.status(200).json({
+      success:true,
       message: "Users fetched successfully",
       data: result,
     });
   } catch (error) {
     console.error("Fetch Users Error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({success:false, message: "Internal Server Error" });
   }
 };
 
@@ -37,12 +38,13 @@ const findByUser = async (req, res) => {
   try {
     const result = await User.findById(userId).select("-password");
     res.status(200).json({
+      success:true,
       message: "User fetched successfully",
       data: result,
     });
   } catch (error) {
     console.error("Fetch Users Error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({success:false, message: "Internal Server Error" });
   }
 };
 
@@ -65,7 +67,7 @@ const updateUser = async (req, res) => {
     // Find user
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: "User not found!" });
+      return res.status(404).json({success:false, message: "User not found!" });
     }
 
     const updateData = {
@@ -83,12 +85,13 @@ const updateUser = async (req, res) => {
     );
 
     res.status(200).json({
+      success:true,
       message: "User updated successfully",
       data: result,
     });
   } catch (error) {
     console.error("Update User Error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({success:false, message: "Internal Server Error" });
   }
 };
 
@@ -124,6 +127,7 @@ const loginUser = async (req, res) => {
     const token = createToken(user._id);
 
     res.status(200).json({
+      success:true,
       message: "Login successful",
       data: {
         id: user._id,
@@ -135,7 +139,7 @@ const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Login Error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({success:false, message: "Internal Server Error" });
   }
 };
 // User registration
@@ -182,6 +186,7 @@ const registerUser = async (req, res) => {
     const token = createToken(newUser._id);
 
     res.status(201).json({
+      success:true,
       message: "User registered successfully!",
       user: {
         id: newUser?._id,
@@ -194,7 +199,7 @@ const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Registration Error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({success:false, message: "Internal Server Error" });
   }
 };
 
@@ -205,3 +210,8 @@ export const userController = {
   findByUser,
   updateUser,
 };
+
+// controller to check if user is authenticated
+export const checkAuth = (req,res)=>{
+  res.json({success:true, user:req.user})
+}
