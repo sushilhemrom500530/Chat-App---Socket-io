@@ -34,7 +34,9 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const { data } = await axios.get("/auth/check");
+       console.log("check user", data);
       if (data.success) {
+        console.log("check user", data);
         setAuthUser(data.user);
         connectSocket(data.user);
       }
@@ -51,10 +53,10 @@ export const AuthProvider = ({ children }) => {
         console.log("Login user: ", data?.user);
         setAuthUser(data.user);
         connectSocket(data.user);
-        axios.defaults.headers.common["token"] = data.token;
+        axios.defaults.headers.common["token"] = data?.user?.token;
 
-        Cookies.set("token", data.token); 
-        setToken(data.token); 
+        Cookies.set("token", data?.user?.token); 
+        setToken(data?.user?.token); 
         toast.success(data.message || "Login successfully");
         router.push("/");
       } else {

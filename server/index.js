@@ -6,6 +6,7 @@ import http from "http"; // For creating server
 import { Server } from "socket.io"; // Socket.IO server
 import { userRoutes } from "./routes/userRoutes.js";
 import { messageRoutes } from "./routes/messageRoutes.js";
+import { authRoutes } from "./routes/authRoutes.js";
 
 dotenv.config();
 const port = process.env.PORT || 5000;
@@ -47,6 +48,7 @@ app.use(express.json());
 app.use(cors());
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/messages", messageRoutes);
+app.use("/api/v1/auth", authRoutes);
 
 async function main() {
   try {
