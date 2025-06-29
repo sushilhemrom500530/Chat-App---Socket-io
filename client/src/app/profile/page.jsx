@@ -1,22 +1,19 @@
 "use client";
 import assets from "@/assets/assets";
 import { AuthContext } from "@/context-api/authContext";
-import { useRouter } from "next/navigation";
 import { useContext, useState } from "react";
 
 export default function ProfilePage() {
-  const router = useRouter();
+  const [error, setError] = useState(""); // For image validation message
+  const {updateProfile,authUser} = useContext(AuthContext);
 
 const [profileData, setProfileData] = useState({
-  name: "Sushil Hemrom",
-  bio: "as a simple boy",
-  profile: "",      
+  fullName: authUser?.fullName,
+  bio: authUser?.bio,
+  profile: authUser?.profilePic,      
   imageFile: null,  
 });
 
-
-  const [error, setError] = useState(""); // For image validation message
-  const {updateProfile} = useContext(AuthContext);
 
 const handleImageChange = (e) => {
   const file = e.target.files?.[0];
@@ -90,7 +87,7 @@ console.log({formValues});
             required
             className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
             type="text"
-            value={profileData.name}
+            value={profileData.fullName}
             onChange={(e) =>
               setProfileData({ ...profileData, name: e.target.value })
             }

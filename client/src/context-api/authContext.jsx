@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createContext, useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
-import Cookies from "js-cookie"; 
+import Cookies from "js-cookie";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 axios.defaults.baseURL = baseUrl;
@@ -21,8 +21,7 @@ export const AuthProvider = ({ children }) => {
 
   // logout
   const logout = useCallback(async () => {
-    Cookies.remove("token"); 
-    setToken("");
+    Cookies.remove("token");
     setAuthUser(null);
     setOnlineUser([]);
     axios.defaults.headers.common["token"] = null;
@@ -49,12 +48,13 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await axios.post(`/user/${state}`, credentials);
       if (data?.user) {
+        console.log("Login user: ", data?.user);
         setAuthUser(data.user);
         connectSocket(data.user);
         axios.defaults.headers.common["token"] = data.token;
-        setToken(data.token);
 
-        Cookies.set("token", data?.user?.token); 
+        Cookies.set("token", data.token); 
+        setToken(data.token); 
         toast.success(data.message || "Login successfully");
         router.push("/");
       } else {
@@ -103,10 +103,10 @@ export const AuthProvider = ({ children }) => {
 
   // on mount
   useEffect(() => {
-    const storedToken = Cookies.get("token"); // ✅ changed
+    const storedToken = Cookies.get("token");
     if (storedToken) {
       axios.defaults.headers.common["token"] = storedToken;
-      setToken(storedToken);
+      setToken(storedToken); 
     }
     checkAuth();
   }, []);
