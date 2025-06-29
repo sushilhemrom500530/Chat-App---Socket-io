@@ -1,6 +1,7 @@
 import { fileUploader } from "../helpers/fileUploader.js";
 import Message from "../modules/messageModel.js";
 import User from "../modules/userModel.js";
+import { io,userSocketMap } from "../index.js";
 
 // get all user accepted log in user
 const getUserForSidebar = async (req, res) => {
@@ -104,12 +105,22 @@ const sendMessage = async (req, res) => {
     const messageData = {
       text,
       image,
+      senderId,
+      receiverId
     };
+
+    const newMessage = await Message.create({messageData});
+
+    // emit the new message to the receiver message 
+    const receiverSocketId = userSocketMap[receiverId];
+    if(receiverSocketId){
+        io.to(receiverSocketId).emit("newMessage", newMessage)
+    }
 
     res.json({
       success: true,
       message: "Message send successfully",
-      data: messageData,
+      data: newMessage,
     });
   } catch (error) {
     console.error("Send Messages Error:", error);
