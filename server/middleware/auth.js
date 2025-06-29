@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import User from "../modules/userModel";
+import User from "../modules/userModel.js";
 dotenv.config();
 
 export const protectedRoutes = async (req, res,next) => {
