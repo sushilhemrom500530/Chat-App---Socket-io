@@ -76,7 +76,7 @@ const updateUser = async (req, res) => {
       ...(profilePic && { profilePic }),
     };
 
-    console.log({updateData});
+    // console.log({updateData});
 
     const result = await User.findByIdAndUpdate(
       userId,
