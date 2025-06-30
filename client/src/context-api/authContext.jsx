@@ -21,12 +21,13 @@ export const AuthProvider = ({ children }) => {
 
   // logout
   const logout = useCallback(async () => {
+    router.push("/login");
+    toast.success("Logout successfully");
     Cookies.remove("token");
     setAuthUser(null);
     setOnlineUser([]);
     axios.defaults.headers.common["token"] = null;
-    toast.success("Logout successfully");
-    router.push("/login");
+
     if (socket) socket.disconnect();
   }, [socket]);
 
@@ -54,8 +55,8 @@ export const AuthProvider = ({ children }) => {
         connectSocket(data?.user);
         axios.defaults.headers.common["token"] = data?.user?.token;
 
-        Cookies.set("token", data?.user?.token); 
-        setToken(data?.user?.token); 
+        Cookies.set("token", data?.user?.token);
+        setToken(data?.user?.token);
         toast.success(data.message || "Login successfully");
         router.push("/");
       } else {
@@ -70,13 +71,9 @@ export const AuthProvider = ({ children }) => {
   const updateProfile = async (formValues, imageFile) => {
     const profileData = modifyPayload({ formValues, file: imageFile });
     try {
-      const { data } = await axios.put(
-        `/user/${authUser?._id}`,
-        profileData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+      const { data } = await axios.put(`/user/${authUser?._id}`, profileData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       if (data?.success) {
         setAuthUser(data.user);
@@ -105,24 +102,23 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  // get user where find by id
 
-  // get user where find by id 
-
-  const userFindById = async (userId)=>{
+  const userFindById = async (userId) => {
     try {
       const { data } = await axios.get(`/user/${userId}`);
       return data?.data;
     } catch (error) {
       console.error(error?.message);
     }
-  }
+  };
 
   // on mount
   useEffect(() => {
     const storedToken = Cookies.get("token");
     if (storedToken) {
       axios.defaults.headers.common["token"] = storedToken;
-      setToken(storedToken); 
+      setToken(storedToken);
     }
     checkAuth();
   }, []);
@@ -137,7 +133,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         updateProfile,
-        userFindById
+        userFindById,
       }}
     >
       {children}
