@@ -34,14 +34,13 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const { data } = await axios.get("/auth/check");
-       console.log("check user", data);
-      if (data.success) {
-        console.log("check user", data);
-        setAuthUser(data.user);
-        connectSocket(data.user);
+      if (data?.success) {
+        // console.log("check user", data);
+        setAuthUser(data?.user);
+        connectSocket(data?.user);
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message || "User not found!");
+      // toast.error(error?.response?.data?.message || "User not found!");
     }
   };
 
@@ -51,8 +50,8 @@ export const AuthProvider = ({ children }) => {
       const { data } = await axios.post(`/user/${state}`, credentials);
       if (data?.user) {
         console.log("Login user: ", data?.user);
-        setAuthUser(data.user);
-        connectSocket(data.user);
+        setAuthUser(data?.user);
+        connectSocket(data?.user);
         axios.defaults.headers.common["token"] = data?.user?.token;
 
         Cookies.set("token", data?.user?.token); 
@@ -72,7 +71,7 @@ export const AuthProvider = ({ children }) => {
     const profileData = modifyPayload({ formValues, file: imageFile });
     try {
       const { data } = await axios.put(
-        `/user/68600f7e1e9585dee6d124c5`,
+        `/user/${authUser?._id}`,
         profileData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -80,6 +79,8 @@ export const AuthProvider = ({ children }) => {
       );
 
       if (data?.success) {
+        setAuthUser(data.user);
+        await checkAuth();
         setAuthUser(data.user);
         toast.success(data.message || "Profile updated successfully");
         router.push("/");
@@ -91,10 +92,11 @@ export const AuthProvider = ({ children }) => {
 
   // connect socket
   const connectSocket = (userData) => {
+    // console.log("User data is:",userData);
     if (!userData || socket?.connected) return;
 
     const newSocket = io(baseUrl, {
-      query: { userId: userData._id },
+      query: { userId: userData?._id },
     });
     newSocket.connect();
     setSocket(newSocket);
@@ -102,6 +104,18 @@ export const AuthProvider = ({ children }) => {
       setOnlineUser(userIds);
     });
   };
+
+
+  // get user where find by id 
+
+  const userFindById = async (userId)=>{
+    try {
+      const { data } = await axios.get(`/user/${userId}`);
+      return data?.data;
+    } catch (error) {
+      console.error(error?.message);
+    }
+  }
 
   // on mount
   useEffect(() => {
@@ -123,6 +137,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         updateProfile,
+        userFindById
       }}
     >
       {children}

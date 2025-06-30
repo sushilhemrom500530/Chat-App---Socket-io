@@ -1,55 +1,76 @@
 "use client";
 import assets from "@/assets/assets";
 import { AuthContext } from "@/context-api/authContext";
-import { useContext, useState } from "react";
+import Image from "next/image";
+import { useContext, useEffect, useState } from "react";
 
 export default function ProfilePage() {
-  const [error, setError] = useState(""); // For image validation message
-  const {updateProfile,authUser} = useContext(AuthContext);
+  const [error, setError] = useState("");
+  const { updateProfile, authUser } = useContext(AuthContext);
+  const [showImage, setShowImage] = useState("");
+  const [isLoading,setIsLoading] = useState(false)
 
-const [profileData, setProfileData] = useState({
-  fullName: authUser?.fullName,
-  bio: authUser?.bio,
-  profile: authUser?.profilePic,      
-  imageFile: null,  
-});
+  const [profileData, setProfileData] = useState({
+    fullName: authUser?.fullName || "",
+    bio: authUser?.bio || "",
+    profile: authUser?.profilePic || "",
+    imageFile: null,
+  });
 
+  useEffect(() => {
+    if (authUser) {
+      setProfileData({
+        fullName: authUser?.fullName || "",
+        bio: authUser?.bio || "",
+        profile: authUser?.profilePic || "",
+        imageFile: null,
+      });
+      setShowImage("");
+    }
+  }, [authUser]);
 
-const handleImageChange = (e) => {
-  const file = e.target.files?.[0];
-  if (file) {
-    const imageURL = URL.createObjectURL(file);
-    const img = new Image();
-    img.src = imageURL;
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const imageURL = URL.createObjectURL(file);
+      const img = document.createElement("img"); // ✅ avoid conflict with next/image
+      img.src = imageURL;
 
-    img.onload = () => {
-      if (img.width < 100 || img.height < 100) {
-        setError("Image is too small. Minimum size is 100x100 pixels.");
-        setProfileData({ ...profileData, profile: "", imageFile: null });
-      } else {
-        setError("");
-        setProfileData({ ...profileData, profile: imageURL, imageFile: file });
-      }
-    };
-  }
-};
-
-
- const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  if (error) {
-    alert("Please fix the image error before submitting.");
-    return;
-  }
-
-  const formValues = {
-    fullName: profileData.name,
-    bio: profileData.bio,
+      img.onload = () => {
+        if (img.width < 100 || img.height < 100) {
+          setError("Image is too small. Minimum size is 100x100 pixels.");
+          setProfileData({ ...profileData, profile: "", imageFile: null });
+          setShowImage("");
+        } else {
+          setError("");
+          setShowImage(imageURL);
+          setProfileData({
+            ...profileData,
+            profile: imageURL,
+            imageFile: file,
+          });
+        }
+      };
+    }
   };
-console.log({formValues});
-  await updateProfile(formValues, profileData.imageFile);
-};
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+setIsLoading(true)
+    if (error) {
+      alert("Please fix the image error before submitting.");
+      setIsLoading(false)
+      return;
+    }
+
+    const formValues = {
+      fullName: profileData.fullName,
+      bio: profileData.bio,
+    };
+
+    await updateProfile(formValues, profileData.imageFile);
+     setIsLoading(false)
+  };
 
 
   return (
@@ -72,10 +93,12 @@ console.log({formValues});
               type="file"
               onChange={handleImageChange}
             />
-            <img
-              src={profileData.profile || assets?.avatar_icon.src}
+            <Image
+              src={showImage || assets.avatar_icon.src}
               alt="avatar_icon"
-              className="w-12 h-12 rounded-full"
+              height={48}
+              width={48}
+              className="w-12 h-12 rounded-full object-cover"
             />
             upload profile image
           </label>
@@ -89,7 +112,7 @@ console.log({formValues});
             type="text"
             value={profileData.fullName}
             onChange={(e) =>
-              setProfileData({ ...profileData, name: e.target.value })
+              setProfileData({ ...profileData, fullName: e.target.value })
             }
           />
 
@@ -108,14 +131,18 @@ console.log({formValues});
             type="submit"
             className="bg-gradient-to-r from-purple-400 to-violet-600 text-white p-2 rounded-full text-lg cursor-pointer"
           >
-            Save
+            {
+              isLoading ? "Loading..." : "Save"
+            }
+            
           </button>
         </form>
-
-        <img
-          src={assets.logo_icon.src}
-          alt="logo"
-          className="max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10"
+        <Image
+           src={authUser?.profilePic || assets.avatar_icon}
+          alt="Uploaded Preview"
+          height={160}
+          width={160}
+          className="max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10 object-cover"
         />
       </div>
     </div>

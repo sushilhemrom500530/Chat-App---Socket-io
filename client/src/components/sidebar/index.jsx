@@ -1,8 +1,14 @@
 import assets, { userDummyData } from "@/assets/assets";
+import { AuthContext } from "@/context-api/authContext";
 import Image from "next/image";
 import Link from "next/link";
+import { useContext } from "react";
 
 export default function Sidebar({ selectedUser, setSelectedUser }) {
+  const { logout } = useContext(AuthContext);
+  const handleLogout = async()=>{
+    await logout()
+}
   return (
     <div
       className={`bg-[#8185B2]/10 h-auto p-4 rounded-r-xl text-white ${
@@ -21,7 +27,7 @@ export default function Sidebar({ selectedUser, setSelectedUser }) {
             <div className="absolute top-full right-0 z-20 w-32 p-4 rounded-md bg-[#282142] border border-gray-500 text-gray-100 hidden group-hover:block text-sm">
               <Link href="/profile">Edit Profile</Link>
               <hr className="border-t border-gray-500 my-2" />
-              <button className="cursor-pointer">Logout</button>
+              <button onClick={handleLogout} className="cursor-pointer">Logout</button>
             </div>
           </div>
         </div>
