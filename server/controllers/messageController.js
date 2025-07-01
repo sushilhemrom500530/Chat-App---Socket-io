@@ -6,7 +6,8 @@ import { io,userSocketMap } from "../index.js";
 // get all user accepted log in user
 const getUserForSidebar = async (req, res) => {
   try {
-    const userId = req.user?._id;
+    // const userId = req.user?._id;
+    const userId ="68600f7e1e9585dee6d124c5";
     const filterUsers = await User.find({ _id: { $ne: userId } }).select(
       "-password"
     );
@@ -39,7 +40,9 @@ const getUserForSidebar = async (req, res) => {
 const getMessages = async (req, res) => {
   try {
     const { id: selectedUserId } = req.params;
-    const myId = req.user._id;
+    const myId = "68600f7e1e9585dee6d124c5";
+    // const myId = req.user._id;
+
     const messages = await Message.find({
       $or: [
         { senderId: myId, receiverId: selectedUserId },
@@ -57,7 +60,7 @@ const getMessages = async (req, res) => {
     res.json({
       success: true,
       message: "Messages rettrieve successfully",
-      data: messages,
+      messages: messages,
     });
   } catch (error) {
     console.error("Get All Messages Error:", error);
@@ -89,7 +92,8 @@ const markMessageAsSeen = async (req, res) => {
 // send message to selected user
 const sendMessage = async (req, res) => {
   const receiverId = req.params.id;
-  const senderId = req.user?._id;
+  const senderId = "68600f7e1e9585dee6d124c5";
+  // const senderId = req.user?._id;
   try {
     // Parse JSON string from `data` field
     const { text } = JSON.parse(req.body.data || "{}");
@@ -108,8 +112,7 @@ const sendMessage = async (req, res) => {
       senderId,
       receiverId
     };
-
-    const newMessage = await Message.create({messageData});
+    const newMessage = await Message.create(messageData);
 
     // emit the new message to the receiver message 
     const receiverSocketId = userSocketMap[receiverId];

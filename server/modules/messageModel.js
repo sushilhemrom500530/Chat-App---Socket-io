@@ -18,16 +18,15 @@ const messageSchema = new mongoose.Schema(
     },
     image: {
       type: String,
-      required: true
     },
     seen: {
       type: Boolean,
       default:false
     },
-    bio: {
-      type: String,
-      required: true
-    },
+    // bio: {
+    //   type: String,
+    //   required: true
+    // },
   },
   {
     timestamps: true // adds createdAt and updatedAt

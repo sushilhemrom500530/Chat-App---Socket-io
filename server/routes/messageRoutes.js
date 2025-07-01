@@ -6,12 +6,12 @@ const router = express.Router();
 
 router.get(
     "/users", 
-    protectedRoutes, 
+    // protectedRoutes, 
     messageController.getUserForSidebar
 );
 router.get(
     "/:id", 
-    protectedRoutes,
+    // protectedRoutes,
      messageController.getMessages
     );
 router.put(
