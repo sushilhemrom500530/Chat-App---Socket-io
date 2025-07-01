@@ -1,4 +1,4 @@
-// fromData payload
+
 export const modifyPayload = (values) => {
   const obj = { ...values };
   const file = obj["file"];

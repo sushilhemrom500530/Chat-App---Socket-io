@@ -40,8 +40,9 @@ const getUserForSidebar = async (req, res) => {
 const getMessages = async (req, res) => {
   try {
     const { id: selectedUserId } = req.params;
-    const myId = "68600f7e1e9585dee6d124c5";
+    const myId = "6863654c62efafb423d7083f";
     // const myId = req.user._id;
+    // console.log({selectedUserId,myId});
 
     const messages = await Message.find({
       $or: [
@@ -92,7 +93,7 @@ const markMessageAsSeen = async (req, res) => {
 // send message to selected user
 const sendMessage = async (req, res) => {
   const receiverId = req.params.id;
-  const senderId = "68600f7e1e9585dee6d124c5";
+  const senderId = "6863651a62efafb423d70838";
   // const senderId = req.user?._id;
   try {
     // Parse JSON string from `data` field

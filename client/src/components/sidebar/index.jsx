@@ -22,7 +22,7 @@ export default function Sidebar() {
         user?.name?.toLowerCase().includes(searchInput.toLowerCase())
       )
     : users;
-  console.log("filtered data :", filteredUsers);
+  console.log("online users :", onlineUser);
 
   useEffect(() => {
     getUsers();
@@ -76,7 +76,7 @@ export default function Sidebar() {
         </div>
       </div>
       <div className="h-[58.5vh] overflow-y-auto flex flex-col gap-2.5">
-        {filteredUsers?.length > 0 ? (
+        {filteredUsers?.length > 0 && (
           filteredUsers.map((user, idx) => (
             <div
               onClick={() => {
@@ -117,13 +117,19 @@ export default function Sidebar() {
               )}
             </div>
           ))
-        ) : (
-          <div className="flex flex-wrap flex-col gap-10 items-center justify-center text-white">
+        )}
+        {
+          filteredUsers?.length < 0 && <div className="flex flex-wrap flex-col gap-10 items-center justify-center text-white">
             <p className="font-medium w-max">Search by : {searchInput},</p>
            
             <p>User not found!</p>
           </div>
-        )}
+        }
+        {
+          filteredUsers?.length <= 0 && <div className="text-center py-20 text-white">
+            <p>User not found!</p>
+          </div>
+        }
       </div>
     </div>
   );

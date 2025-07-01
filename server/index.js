@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 import http from "http"; // For creating server
 import { Server } from "socket.io"; // Socket.IO server
 import { userRoutes } from "./routes/userRoutes.js";
@@ -15,34 +15,56 @@ const url = process.env.DB_URL;
 const app = express();
 const server = http.createServer(app); // Create HTTP server from express
 export const io = new Server(server, {
-  cors: {origin: "*"}
+  cors: {
+    origin: "http://localhost:3000",// frontend origin
+    credentials: true,
+  },
 });
 
-// store online users 
-export const userSocketMap = {} // {userId, socketId}
+// store online users
+export const userSocketMap = {}; // {userId, socketId}
 
-// Socket.IO event or connection handler 
+// Socket.IO event or connection handler
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
-  console.log("A user connected:", userId);
-  // set value in userSocketMap 
-  if(userId) userSocketMap[userId]= socket.id;
+  console.log("✅ A user connected:", userId);
 
-  // emil online user to all connected clients
-  socket.emit("getOnlineUsers")
+  if (userId) {
+    userSocketMap[userId] = socket.id;
+    console.log("✅ Updated userSocketMap:", userSocketMap);
+  }
 
-  // Example event
-  socket.on("message", (data) => {
-    console.log("Message received:", data);
-    io.emit("message", data); // Broadcast to all clients
-  });
+  io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   socket.on("disconnect", () => {
-    console.log("User disconnected:", userId);
+    console.log("❌ User disconnected:", userId);
     delete userSocketMap[userId];
-    io.emit("getOnlineUsers", Object.keys(userSocketMap))
+    io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
+
+
+// io.on("connection", (socket) => {
+//   const userId = socket.handshake.query.userId;
+//   console.log("A user connected:", userId);
+//   // set value in userSocketMap
+//   if(userId) userSocketMap[userId]= socket.id;
+
+//   // emil online user to all connected clients
+//   socket.emit("getOnlineUsers")
+
+//   // Example event
+//   socket.on("message", (data) => {
+//     console.log("Message received:", data);
+//     io.emit("message", data); // Broadcast to all clients
+//   });
+
+//   socket.on("disconnect", () => {
+//     console.log("User disconnected:", userId);
+//     delete userSocketMap[userId];
+//     io.emit("getOnlineUsers", Object.keys(userSocketMap))
+//   });
+// });
 
 app.use(express.json());
 app.use(cors());
@@ -54,7 +76,7 @@ async function main() {
   try {
     await mongoose.connect(url, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
     });
     console.log("MongoDB connected successfully!");
   } catch (error) {

@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
   // check auth
   const checkAuth = async () => {
     try {
-      const { data } = await axios.get("/auth/check");
+      const { data } = await axios.get("/api/v1/auth/check");
       if (data?.success) {
         // console.log("check user", data);
         setAuthUser(data?.user);
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
   // login
   const login = async (state, credentials) => {
     try {
-      const { data } = await axios.post(`/user/${state}`, credentials);
+      const { data } = await axios.post(`/api/v1/user/${state}`, credentials);
       if (data?.user) {
         console.log("Login user: ", data?.user);
         setAuthUser(data?.user);
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
   const updateProfile = async (formValues, imageFile) => {
     const profileData = modifyPayload({ formValues, file: imageFile });
     try {
-      const { data } = await axios.put(`/user/${authUser?._id}`, profileData, {
+      const { data } = await axios.put(`/api/v1/user/${authUser?._id}`, profileData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -88,25 +88,39 @@ export const AuthProvider = ({ children }) => {
   };
 
   // connect socket
-  const connectSocket = (userData) => {
-    // console.log("User data is:",userData);
-    if (!userData || socket?.connected) return;
+const connectSocket = (userData) => {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  console.log("🔗 Trying to connect to:", baseUrl);
 
-    const newSocket = io(baseUrl, {
-      query: { userId: userData?._id },
-    });
-    newSocket.connect();
-    setSocket(newSocket);
-    newSocket.on("getOnlineUsers", (userIds) => {
-      setOnlineUser(userIds);
-    });
-  };
+  if (!userData || socket?.connected) return;
+
+  const newSocket = io(baseUrl, {
+    query: { userId: userData._id },
+    transports: ["websocket"],
+  });
+
+  newSocket.on("connect", () => {
+    console.log("Socket connected:", newSocket.id);
+  });
+
+  newSocket.on("connect_error", (err) => {
+    console.error("Connection Error:", err.message);
+  });
+
+  newSocket.on("getOnlineUsers", (userIds) => {
+    console.log("Online user IDs:", userIds);
+    setOnlineUser(userIds);
+  });
+
+  setSocket(newSocket);
+};
+
 
   // get user where find by id
 
   const userFindById = async (userId) => {
     try {
-      const { data } = await axios.get(`/user/${userId}`);
+      const { data } = await axios.get(`/api/v1/user/${userId}`);
       return data?.data;
     } catch (error) {
       console.error(error?.message);

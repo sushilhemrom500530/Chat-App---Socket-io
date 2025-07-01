@@ -16,7 +16,7 @@ export const ChatProvider = ({ children }) => {
   // function to get all user for sidebar
   const getUsers = async () => {
     try {
-      const { data } = await axios.get("/messages/users");
+      const { data } = await axios.get("/api/v1/messages/users");
       if (data?.success) {
         setUsers(data?.users);
         setUnseenMessages(data?.unseenMessages);
@@ -29,7 +29,7 @@ export const ChatProvider = ({ children }) => {
   // function to get messages for selected user
   const getMessages = async (userId) => {
     try {
-      const { data } = await axios.get(`/messages/${userId}`);
+      const { data } = await axios.get(`/api/v1/messages/${userId}`);
       if (data?.success) {
         setMessages(data.messages);
       }
@@ -42,7 +42,7 @@ export const ChatProvider = ({ children }) => {
   const sendMessage = async (messageData) => {
     try {
       const { data } = await axios.post(
-        `/messages/sent/${selectedUser?._id}`,
+        `/api/v1/messages/sent/${selectedUser?._id}`,
         messageData
       );
       if (data?.success) {
@@ -60,7 +60,7 @@ export const ChatProvider = ({ children }) => {
       if (selectedUser && newMessage.senderId === selectedUser?._id) {
         newMessage.seen == true;
         setMessages((prevMessage) => [...prevMessage, data.data]);
-        axios.put(`/messages/mark/${newMessage?._id}`);
+        axios.put(`/api/v1/messages/mark/${newMessage?._id}`);
       } else {
         setUnseenMessages((prevUnseenMessages) => ({
           ...prevUnseenMessages,
