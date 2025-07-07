@@ -1,12 +1,31 @@
 import assets, { messagesDummyData } from "@/assets/assets";
+import { AuthContext } from "@/context-api/authContext";
+import { ChatContext } from "@/context-api/chatContext";
 import { dateFormatter } from "@/utils/date.formatter";
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
-export default function ChatContainer({ selectedUser, setSelectedUser }) {
-  const [isUser, setIsUser] = useState(true);
-  
+export default function ChatContainer() {
+  const [formMessage, setFormMessage] = useState('');
+    const { logout, onlineUser } = useContext(AuthContext);
+    const {
+      getUsers,
+      users,
+      selectedUser,
+      setSelectedUser,
+      sendMessage,
+      unseenMessages,
+      setUnseenMessages,
+    } = useContext(ChatContext);
   const scrollEnd = useRef();
+
+  // handle sending a message 
+  const handleSendMessage =async (e)=>{
+    e.preventDefault();
+    if(formMessage.trim() === '') return null;
+     await sendMessage({text:formMessage.trim()})
+     setFormMessage('');
+  }
 
   useEffect(()=>{
     if(scrollEnd.current){
@@ -96,13 +115,13 @@ export default function ChatContainer({ selectedUser, setSelectedUser }) {
       {/* ----------- bottom area ------------- */}
       <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3">
         <div className="flex-1 flex items-center gap-2 rounded-full px-3 bg-gray-100/12">
-            <input type="text" placeholder="Send a message" className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400" />
+            <input onChange={(e)=>setFormMessage(e.target.value)} value={formMessage} onKeyDown={(e)=>e.key === "Enter" ? handleSendMessage(e) : null} type="text" placeholder="Send a message" className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400" />
             <input type="file" id="image" accept="image/*" hidden />
             <label htmlFor="image">
                 <Image src={assets.gallery_icon} alt="gallery-icon" className="cursor-pointer mr-2 w-5" />
             </label>
         </div>
-        <Image src={assets.send_button} alt="send_icon" className="w-7 cursor-pointer" />
+        <Image onClick={handleSendMessage} src={assets.send_button} alt="send_icon" className="w-7 cursor-pointer" />
       </div>
     </div>
   ) : (

@@ -19,10 +19,10 @@ export default function Sidebar() {
 
   const filteredUsers = searchInput
     ? users.filter((user) =>
-        user?.name?.toLowerCase().includes(searchInput.toLowerCase())
+        user?.fullName?.toLowerCase()?.includes(searchInput?.toLowerCase())
       )
     : users;
-  console.log("online users :", onlineUser);
+  console.log("filter users :", filteredUsers);
 
   useEffect(() => {
     getUsers();

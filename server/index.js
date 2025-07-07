@@ -16,7 +16,7 @@ const app = express();
 const server = http.createServer(app); // Create HTTP server from express
 export const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",// frontend origin
+    origin: "http://localhost:3000", // frontend origin
     credentials: true,
   },
 });
@@ -27,22 +27,27 @@ export const userSocketMap = {}; // {userId, socketId}
 // Socket.IO event or connection handler
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
-  console.log("✅ A user connected:", userId);
+  console.log("A user connected:", userId);
 
   if (userId) {
     userSocketMap[userId] = socket.id;
-    console.log("✅ Updated userSocketMap:", userSocketMap);
+    console.log("Updated userSocketMap:", userSocketMap);
   }
 
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
+  //   // Example event
+  //   socket.on("message", (data) => {
+  //     console.log("Message received:", data);
+  //     io.emit("message", data); // Broadcast to all clients
+  //   });
+
   socket.on("disconnect", () => {
-    console.log("❌ User disconnected:", userId);
+    console.log("User disconnected:", userId);
     delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
-
 
 // io.on("connection", (socket) => {
 //   const userId = socket.handshake.query.userId;
