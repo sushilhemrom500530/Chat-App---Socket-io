@@ -50,7 +50,7 @@ const findByUser = async (req, res) => {
 
 
 const updateUser = async (req, res) => {
-  const { userId } = req.params;
+  const {userId} = req?.params;
 
   try {
     // Parse JSON string from `data` field
@@ -62,14 +62,13 @@ const updateUser = async (req, res) => {
       Object.assign(formValues,{profilePic: cloudResult.secure_url})
     }
 
+    // console.log("find data===>",userId);
+    
     // Find user
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({success:false, message: "User not found!" });
     }
-
-    // console.log(formValues);
-
     const result = await User.findByIdAndUpdate(
       userId,
       { $set: formValues },

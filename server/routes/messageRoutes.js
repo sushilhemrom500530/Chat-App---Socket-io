@@ -22,7 +22,7 @@ router.put(
 router.post(
     "/sent/:id", 
      fileUploader.upload.single("file"),
-    // protectedRoutes,
+    protectedRoutes,
      messageController.sendMessage
     );
 
