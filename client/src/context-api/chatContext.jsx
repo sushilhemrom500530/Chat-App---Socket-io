@@ -96,6 +96,7 @@ const sendMessage = async (messageData) => {
     });
   };
 
+  console.log("unseen Messages from context:", unseenMessages);
   // function to unsubscriber from messages
   const unSubscribeToMessages = async () => {
     if (socket) socket.off("newMessage");

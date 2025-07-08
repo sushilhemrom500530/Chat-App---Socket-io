@@ -1,4 +1,4 @@
-import assets, { messagesDummyData } from "@/assets/assets";
+import assets from "@/assets/assets";
 import { AuthContext } from "@/context-api/authContext";
 import { ChatContext } from "@/context-api/chatContext";
 import { dateFormatter } from "@/utils/date.formatter";
@@ -51,6 +51,8 @@ const handleSendImage = async (e) => {
       scrollEnd.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, selectedUser]);
+
+  console.log("chat container selected user: ", selectedUser);
 
 
   return selectedUser ? (
