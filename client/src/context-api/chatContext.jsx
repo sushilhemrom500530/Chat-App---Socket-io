@@ -17,12 +17,14 @@ export const ChatProvider = ({ children }) => {
   const getUsers = async () => {
     try {
       const { data } = await axios.get("/api/v1/messages/users");
+      console.log('get user data:', data);
       if (data?.success) {
         setUsers(data?.users);
         setUnseenMessages(data?.unseenMessages);
       }
     } catch (error) {
-      toast.error(error.messages);
+      console.log("error is:", error?.response?.data?.message);
+      // toast.error(error?.response?.data?.message);
     }
   };
 
@@ -31,27 +33,49 @@ export const ChatProvider = ({ children }) => {
     try {
       const { data } = await axios.get(`/api/v1/messages/${userId}`);
       if (data?.success) {
-        setMessages(data.messages);
+        setMessages(data?.messages);
       }
     } catch (error) {
-      toast.error(error.messages);
+     console.log("error is:", error?.response?.data?.message);
+      // toast.error(error?.response?.data?.message);
     }
   };
 
   // function to send messages to selected user
-  const sendMessage = async (messageData) => {
-    try {
-      const { data } = await axios.post(
-        `/api/v1/messages/sent/${selectedUser?._id}`,
-        messageData
-      );
-      if (data?.success) {
-        setMessages((prevMessage) => [...prevMessage, data.data]);
-      } else toast.error(data?.message);
-    } catch (error) {
-      toast.error(error.messages);
+const sendMessage = async (messageData) => {
+  try {
+    const formData = new FormData();
+
+    // Attach text message if it exists
+    if (messageData.text) {
+      formData.append("data", JSON.stringify({ text: messageData.text }));
     }
-  };
+
+    // Attach image file if it exists
+    if (messageData.image) {
+      formData.append("file", messageData.image);
+    }
+
+    const { data } = await axios.post(
+      `/api/v1/messages/sent/${selectedUser?._id}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    if (data?.success) {
+      setMessages((prevMessage) => [...prevMessage, data.data]);
+    } else {
+      toast.error(data?.message);
+    }
+  } catch (error) {
+    toast.error(error.message);
+  }
+};
+
 
   // function to subscriber from messages
   const subscribeToMessages = async () => {
@@ -59,7 +83,7 @@ export const ChatProvider = ({ children }) => {
     socket.on("newMessage", (newMessage) => {
       if (selectedUser && newMessage.senderId === selectedUser?._id) {
         newMessage.seen == true;
-        setMessages((prevMessage) => [...prevMessage, data.data]);
+        setMessages((prevMessage) => [...prevMessage, newMessage]);
         axios.put(`/api/v1/messages/mark/${newMessage?._id}`);
       } else {
         setUnseenMessages((prevUnseenMessages) => ({

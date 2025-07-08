@@ -57,10 +57,10 @@ export const AuthProvider = ({ children }) => {
 
         Cookies.set("token", data?.user?.token);
         setToken(data?.user?.token);
-        toast.success(data.message || "Login successfully");
+        toast.success(data?.message || "Login successfully");
         router.push("/");
       } else {
-        toast.error(data.message || "Something went wrong!");
+        toast.error(data?.message || "Something went wrong!");
       }
     } catch (error) {
       toast.error(error?.response?.data?.message || "Something went wrong!");
@@ -76,10 +76,10 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (data?.success) {
-        setAuthUser(data.user);
+        setAuthUser(data?.user);
         await checkAuth();
-        setAuthUser(data.user);
-        toast.success(data.message || "Profile updated successfully");
+        setAuthUser(data?.user);
+        toast.success(data?.message || "Profile updated successfully");
         router.push("/");
       }
     } catch (error) {

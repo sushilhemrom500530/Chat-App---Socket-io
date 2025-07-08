@@ -22,7 +22,7 @@ export default function Sidebar() {
         user?.fullName?.toLowerCase()?.includes(searchInput?.toLowerCase())
       )
     : users;
-  console.log("filter users :", filteredUsers);
+  // console.log("filter users :", filteredUsers);
 
   useEffect(() => {
     getUsers();
@@ -39,16 +39,16 @@ export default function Sidebar() {
             src={assets.logo}
             alt="logo_image"
             className="max-w-40"
-            height={0}
-            width={0}
+            height={160}
+            width={160}
           />
           <div className="relative py-2 group">
             <Image
               src={assets.menu_icon}
               alt="menu_image"
               className="max-w-5 cursor-pointer"
-              height={0}
-              width={0}
+              height={20}
+              width={20}
             />
             <div className="absolute top-full right-0 z-20 w-32 p-4 rounded-md bg-[#282142] border border-gray-500 text-gray-100 hidden group-hover:block text-sm">
               <Link href="/profile">Edit Profile</Link>
@@ -64,8 +64,8 @@ export default function Sidebar() {
             src={assets.search_icon}
             alt="logo_image"
             className="max-w-3"
-            height={0}
-            width={0}
+            height={12}
+            width={12}
           />
           <input
             type="text"

@@ -12,6 +12,8 @@ export default function RightSidebar({ selectedUser }) {
         <Image
         src={selectedUser?.profilePic || assets.avatar_icon}
         alt="profile_picture"
+        height={80}
+        width={80}
         className="max-w-20 aspect-[1/1] rounded-full"
       />
       <h1 className="px-10 text-xl font-medium mx-auto flex items-center gap-2  ">
@@ -24,11 +26,11 @@ export default function RightSidebar({ selectedUser }) {
       <hr className="border-[#ffffff50] my-4 mx-2" />
       <div className="px-5 text-xs text-white">
         <p>Media</p>
-        <div className="mt-2 max-w-[200px] overflow-y-auto grid grid-cols-2 gap-4 opacity-80">
+        <div className="mt-2 max-w-[200px] overflow-y-auto grid grid-cols-2 gap-4 opacity-80 overflow-hidden">
           {
             imagesDummyData?.map((url,idx)=>(
               <div key={idx} onClick={() => window.open(url?.src, '_blank')} className="cursor-pointer rounded">
-                <Image src={url} alt="media-image" className="h-full rounded-md" width={0} height={0} />
+                <Image src={url} alt="media-image" className="h-full w-full rounded-md" width={0} height={0} />
               </div>
             ))
           }

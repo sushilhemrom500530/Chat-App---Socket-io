@@ -34,7 +34,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-center bg-cover flex items-center justify-center gap-8 sm:justify-evenly max-sm:flex-col backdrop-blur-2xl">
       {/* --------- left ---------- */}
-      <Image src={assets.logo_big} alt="logo" className="w-[min(30vw,250px)]" />
+      <Image src={assets.logo_big} alt="logo" height={0} width={0} className="w-[min(30vw,250px)]" />
       {/* ------------ right ------------------ */}
       <div>
         {isLogin === "register" ? (
@@ -50,6 +50,8 @@ export default function LoginPage() {
                 <Image
                   src={assets.arrow_icon}
                   alt="arrow-icon"
+                  height={24}
+                  width={24}
                   onClick={() => setSetBio(false)}
                   className="max-w-6 cursor-pointer"
                 />
