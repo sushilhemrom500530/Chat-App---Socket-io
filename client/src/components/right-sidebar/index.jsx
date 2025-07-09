@@ -18,7 +18,8 @@ export default function RightSidebar() {
   },[messages]);
 
 
-  console.log("messages image :", messagesImage);
+  // console.log("messages image :", messagesImage);
+  const newImage = [...imagesDummyData, messagesImage]
 
   return selectedUser && (
     <div
@@ -49,12 +50,12 @@ export default function RightSidebar() {
       <hr className="border-[#ffffff50] my-4 mx-2" />
       <div className="px-5 text-xs text-white">
         <p>Media</p>
-        <div className="mt-2 max-w-[200px] overflow-y-auto grid grid-cols-2 gap-4 opacity-80 overflow-hidden">
+        <div className="my-2 max-w-[200px] max-h-[300px] overflow-y-auto grid grid-cols-2 gap-2 opacity-80 overflow-hidden">
           {messagesImage?.length > 0 && messagesImage?.map((url, idx) => (
             <div
               key={idx}
               onClick={() => window.open(url, "_blank")}
-              className="cursor-pointer rounded"
+              className="cursor-pointer rounded h-24"
             >
               <Image
                 src={url}

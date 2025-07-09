@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await axios.post(`/api/v1/user/${state}`, credentials);
       if (data?.user) {
-        console.log("Login user: ", data?.user);
+        // console.log("Login user: ", data?.user);
         setAuthUser(data?.user);
         connectSocket(data?.user);
         axios.defaults.headers.common["token"] = data?.user?.token;
@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }) => {
   // connect socket
 const connectSocket = (userData) => {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  console.log("🔗 Trying to connect to:", baseUrl);
+  // console.log("🔗 Trying to connect to:", baseUrl);
 
   if (!userData || socket?.connected) return;
 
@@ -108,7 +108,7 @@ const connectSocket = (userData) => {
   });
 
   newSocket.on("getOnlineUsers", (userIds) => {
-    console.log("Online user IDs:", userIds);
+    // console.log("Online user IDs:", userIds);
     setOnlineUser(userIds);
   });
 

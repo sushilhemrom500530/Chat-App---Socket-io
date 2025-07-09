@@ -3,6 +3,7 @@ import "../styles/globals.css";
 import { AuthProvider } from "@/context-api/authContext";
 import { Toaster } from "react-hot-toast";
 import { ChatProvider } from "@/context-api/chatContext";
+import { CallProvider } from "@/context-api/callContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,9 @@ export default function RootLayout({ children }) {
       >
         <Toaster />
         <AuthProvider>
-          <ChatProvider>{children}</ChatProvider>
+          <ChatProvider>
+            <CallProvider>{children}</CallProvider>
+          </ChatProvider>
         </AuthProvider>
       </body>
     </html>

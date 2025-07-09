@@ -17,7 +17,7 @@ export const ChatProvider = ({ children }) => {
   const getUsers = async () => {
     try {
       const { data } = await axios.get("/api/v1/messages/users");
-      console.log('get user data:', data);
+      // console.log('get user data:', data);
       if (data?.success) {
         setUsers(data?.users);
         setUnseenMessages(data?.unseenMessages);
@@ -96,7 +96,7 @@ const sendMessage = async (messageData) => {
     });
   };
 
-  console.log("unseen Messages from context:", unseenMessages);
+  // console.log("unseen Messages from context:", unseenMessages);
   // function to unsubscriber from messages
   const unSubscribeToMessages = async () => {
     if (socket) socket.off("newMessage");
