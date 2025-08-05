@@ -1,147 +1,106 @@
 "use client";
-import { MdCall, MdVideocam } from "react-icons/md";
 import { useContext, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
+import { ChatContext } from "@/context-api/chatContext";
 import { CallContext } from "@/context-api/callContext";
-
-function areStreamsEqual(a, b) {
-  if (!a || !b) return false;
-  const aTracks = a.getTracks();
-  const bTracks = b.getTracks();
-  if (aTracks.length !== bTracks.length) return false;
-  return aTracks.every((track, idx) => track.id === bTracks[idx].id);
-}
 
 export default function CallUi() {
   const {
     startCall,
     answerCall,
     endCall,
-    callType,
-    myVideoRef,
-    remoteVideoRef,
-    audioRef,
-    receivingCall,
+    isReceivingCall,
+    caller,
     callAccepted,
-    callDuration,
-    stream,
+    localStream,
+    remoteStream,
   } = useContext(CallContext);
 
-  const lastStreamRef = useRef(null);
-  const didPlayRef = useRef(false);
+  const { selectedUser } = useContext(ChatContext);
 
+  const localVideo = useRef(null);
+  const remoteVideo = useRef(null);
+
+  // Attach local stream
   useEffect(() => {
-    const audioEl = audioRef.current;
-    if (!audioEl) return;
+    if (localVideo.current && localStream) {
+      localVideo.current.srcObject = localStream;
+    }
+  }, [localStream]);
 
-    if (callType !== "audio" || !stream) {
-      audioEl.pause();
-      audioEl.srcObject = null;
-      lastStreamRef.current = null;
-      didPlayRef.current = false;
+  // Attach and play remote stream with audio
+  useEffect(() => {
+    if (remoteVideo.current && remoteStream) {
+      remoteVideo.current.srcObject = remoteStream;
+      remoteVideo.current.muted = false;
+      remoteVideo.current.volume = 1;
+
+      remoteVideo.current
+        .play()
+        .catch((e) => console.warn("Autoplay error:", e));
+    }
+  }, [remoteStream]);
+
+  const handleAudioCall = () => {
+    if (!selectedUser?._id) {
+      toast.error("Please select a user to call first.");
       return;
     }
+    startCall(false);
+  };
 
-    const isSameStream = areStreamsEqual(lastStreamRef.current, stream);
-
-    if (!isSameStream) {
-      setTimeout(() => {
-        audioEl.srcObject = stream;
-        lastStreamRef.current = stream;
-        didPlayRef.current = false;
-
-        const playAudio = () => {
-          if (!didPlayRef.current) {
-            didPlayRef.current = true;
-            audioEl.play().catch((err) => {
-              console.warn("Audio play() failed:", err);
-            });
-          }
-        };
-
-        if (audioEl.readyState >= 1) {
-          playAudio();
-        } else {
-          audioEl.addEventListener("loadedmetadata", playAudio, { once: true });
-        }
-      }, 100); // delay avoids interrupting previous play
+  const handleVideoCall = () => {
+    if (!selectedUser?._id) {
+      toast.error("Please select a user to call first.");
+      return;
     }
-  }, [callType, stream]);
+    startCall(true);
+  };
 
   return (
-    <div className="text-white p-4 space-y-4">
-      {/* Incoming Call Notification */}
-      {receivingCall && !callAccepted && (
-        <div className="bg-gray-800 p-4 rounded-md shadow">
-          <p className="text-lg mb-2">Incoming {callType} call...</p>
+    <div className="p-4 bg-gray-900 text-white rounded-lg max-w-4xl mx-auto space-y-4">
+      <div className="space-x-2">
+        <button
+          onClick={handleAudioCall}
+          className="bg-green-600 px-4 py-2 rounded"
+        >
+          Start Audio Call
+        </button>
+        <button
+          onClick={handleVideoCall}
+          className="bg-blue-600 px-4 py-2 rounded"
+        >
+          Start Video Call
+        </button>
+        {callAccepted && (
+          <button onClick={endCall} className="bg-red-600 px-4 py-2 rounded">
+            End Call
+          </button>
+        )}
+      </div>
+
+      {isReceivingCall && !callAccepted && (
+        <div className="mt-4">
+          <p>📞 Incoming {caller?.type} call...</p>
           <button
-            className="px-4 py-2 bg-green-600 rounded hover:bg-green-700 cursor-pointer"
             onClick={answerCall}
+            className="bg-yellow-500 px-4 py-2 rounded mt-2"
           >
-            Answer
+            Accept Call
           </button>
         </div>
       )}
 
-      {/* Video Call View */}
-      {callType === "video" && callAccepted && (
-        <div className="flex gap-4">
-          <video
-            ref={myVideoRef}
-            autoPlay
-            muted
-            playsInline
-            className="w-48 h-32 bg-black rounded"
-          />
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className="w-48 h-32 bg-black rounded"
-          />
-        </div>
-      )}
-
-      {/* Audio Call View */}
-      {callType === "audio" && callAccepted && (
-        <audio ref={audioRef} autoPlay controls className="w-full" />
-      )}
-
-      {/* Call Duration */}
       {callAccepted && (
-        <p className="text-sm text-gray-300">Call Duration: {callDuration}</p>
-      )}
-
-      {/* Call Controls */}
-      <div className="flex gap-4 pt-2">
-        <button
-          onClick={() => startCall("audio")}
-          className="bg-blue-600 p-2 rounded cursor-pointer"
-        >
-          <MdCall size={24} color="white" />
-        </button>
-        <button
-          onClick={() => startCall("video")}
-          className="bg-blue-600 p-2 rounded cursor-pointer"
-        >
-          <MdVideocam size={24} color="white" />
-        </button>
-        <button
-          onClick={endCall}
-          className="bg-red-600 p-2 rounded cursor-pointer"
-        >
-          Hang Up
-        </button>
-      </div>
-
-      {/* Debug Local Tracks */}
-      {stream && (
-        <div className="pt-4">
-          <p className="text-xs text-gray-400">Local Tracks</p>
-          {stream.getTracks().map((t) => (
-            <p key={t.id} className="text-xs text-gray-500">
-              {t.kind} - {t.enabled ? "enabled" : "disabled"}
-            </p>
-          ))}
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <p className="mb-2">Your Video</p>
+            <video ref={localVideo} autoPlay muted className="w-full rounded" />
+          </div>
+          <div>
+            <p className="mb-2">Remote Video</p>
+            <video ref={remoteVideo} autoPlay className="w-full rounded" />
+          </div>
         </div>
       )}
     </div>
