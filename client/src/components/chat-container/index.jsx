@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useContext, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import CallUi from "../call-ui";
+import { MdCall, MdVideocam } from "react-icons/md";
 
 export default function ChatContainer() {
   const [formMessage, setFormMessage] = useState("");
@@ -14,7 +15,6 @@ export default function ChatContainer() {
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } =
     useContext(ChatContext);
   const scrollEnd = useRef();
-
 
   // handle sending a message
   const handleSendMessage = async (e) => {
@@ -48,10 +48,10 @@ export default function ChatContainer() {
   return selectedUser ? (
     <div className="h-full overflow-auto backdrop-blur-lg relative">
       {/* test caller  */}
-     <CallUi />
+      {/* <CallUi /> */}
 
       {/*----- chat header -------- */}
-      {/* <div className="flex items-center justify-between gap-3 py-3 px-4 border-b border-stone-500/50">
+      <div className="flex items-center justify-between gap-3 py-3 px-4 border-b border-stone-500/50">
         <div className="flex items-center gap-3">
           <div className="relative">
             <Image
@@ -94,10 +94,10 @@ export default function ChatContainer() {
             className="max-md:hidden max-w-5"
           />
         </div>
-      </div> 
+      </div>
       {/*------------ chat area ------------ */}
 
-      {/* <div className="flex flex-col h-[calc(100%-120px)] p-3 pb-6 overflow-scroll">
+      <div className="flex flex-col h-[calc(100%-120px)] p-3 pb-6 overflow-scroll">
         {messages?.length > 0 &&
           messages?.map((msg, idx) => (
             <div key={idx}>
@@ -154,7 +154,7 @@ export default function ChatContainer() {
             </div>
           ))}
         <div ref={scrollEnd}></div>
-      </div> */}
+      </div>
       {/* ----------- bottom area ------------- */}
       <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3">
         <div className="flex-1 flex items-center gap-2 rounded-full px-3 bg-gray-100/12">
