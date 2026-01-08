@@ -74,6 +74,7 @@ export const ChatProvider = ({ children }) => {
           if (prev.some((m) => m._id === data.data._id)) return prev;
           return [...prev, data.data];
         });
+        getUsers(); // Refresh sidebar to show last message snippet
       } else {
         toast.error(data?.message);
       }
@@ -118,6 +119,7 @@ export const ChatProvider = ({ children }) => {
           icon: '💬',
         });
       }
+      getUsers(); // Refresh sidebar to show last message snippet
     });
 
     socket.on("userTyping", ({ from }) => {

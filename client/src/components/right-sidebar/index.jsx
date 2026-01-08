@@ -3,10 +3,11 @@ import { AuthContext } from "@/context-api/authContext";
 import { ChatContext } from "@/context-api/chatContext";
 import Image from "next/image";
 import { useContext, useEffect, useState } from "react";
+import { MdEmail, MdInfo, MdCalendarToday } from "react-icons/md";
 
 export default function RightSidebar() {
 
-  const { logout, onlineUser } = useContext(AuthContext);
+  const { logout, onlineUser, authUser } = useContext(AuthContext);
   const { selectedUser, messages } = useContext(ChatContext);
   const [messagesImage, setMessagesImage] = useState([]);
 
@@ -45,12 +46,50 @@ export default function RightSidebar() {
           <p className="w-[90%] mx-auto text-white/60 text-sm capitalize">
             {selectedUser?.bio ? selectedUser?.bio : "Not added bio"}
           </p>
+
+          {selectedUser?._id === authUser?._id && (
+            <div className="w-[90%] mx-auto mt-6 text-left space-y-4">
+              <p className="text-[10px] text-white/40 uppercase tracking-[2px] font-bold">Account Info</p>
+
+              <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400">
+                  <MdEmail size={18} />
+                </div>
+                <div>
+                  <p className="text-[10px] text-white/40 uppercase">Email</p>
+                  <p className="text-xs sm:text-sm text-white/90 truncate max-w-[150px]">{selectedUser?.email}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400">
+                  <MdCalendarToday size={18} />
+                </div>
+                <div>
+                  <p className="text-[10px] text-white/40 uppercase">Joined</p>
+                  <p className="text-xs sm:text-sm text-white/90">
+                    {selectedUser?.createdAt ? new Date(selectedUser?.createdAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400">
+                  <MdInfo size={18} />
+                </div>
+                <div>
+                  <p className="text-[10px] text-white/40 uppercase">Status</p>
+                  <p className="text-xs sm:text-sm text-green-400">Active</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <hr className="border-[#ffffff50] my-4 mx-2" />
         <div className="px-5 text-xs text-white">
           <p>Media</p>
-          <div className="my-2 max-w-[200px] max-h-[300px] overflow-y-auto grid grid-cols-2 gap-2 opacity-80 overflow-hidden">
+          <div className="my-2 max-h-[300px] overflow-y-auto grid grid-cols-2 gap-2 opacity-80 overflow-hidden">
             {messagesImage?.length > 0 && messagesImage?.map((url, idx) => (
               <div
                 key={idx}

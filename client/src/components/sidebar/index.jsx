@@ -146,11 +146,11 @@ export default function Sidebar() {
               <div>
                 <p>{user?.fullName}</p>
                 {typingUsers[user?._id] ? (
-                  <p className="text-xs text-green-500 animate-pulse">typing...</p>
-                ) : idx < 3 ? (
-                  <p className="text-xs">Say to Hi..</p>
+                  <p className="text-xs text-green-500 animate-pulse font-medium">typing...</p>
                 ) : (
-                  <p className="text-xs">&nbsp;</p>
+                  <p className="text-xs text-white/50 truncate max-w-[120px] sm:max-w-[140px]">
+                    {user?.lastMessage || "Say to Hi.."}
+                  </p>
                 )}
               </div>
               {unseenMessages[user?._id] > 0 && (

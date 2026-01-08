@@ -1,33 +1,45 @@
 import { fileUploader } from "../helpers/fileUploader.js";
 import Message from "../modules/messageModel.js";
 import User from "../modules/userModel.js";
-import { io,userSocketMap } from "../index.js";
+import { io, userSocketMap } from "../index.js";
 
 // get all user accepted log in user
 const getUserForSidebar = async (req, res) => {
   try {
-    // const userId = req.user?._id;
-    const userId ="68600f7e1e9585dee6d124c5";
+    const userId = req.user?._id;
     const filterUsers = await User.find({ _id: { $ne: userId } }).select(
       "-password"
     );
     let unseenMessages = {};
-    const promises = filterUsers?.map(async (user) => {
-      const messages = await Message.find({
+
+    const usersWithLastMsg = await Promise.all(filterUsers.map(async (user) => {
+      // Find last message between me and this user
+      const lastMsg = await Message.findOne({
+        $or: [
+          { senderId: user._id, receiverId: userId },
+          { senderId: userId, receiverId: user._id },
+        ],
+      }).sort({ createdAt: -1 });
+
+      // Count unseen messages from this user to me
+      const unseenCount = await Message.countDocuments({
         senderId: user._id,
         receiverId: userId,
+        seen: false
       });
-      if (messages?.length > 0) {
-        unseenMessages[user._id] = messages?.length;
-      }
-    });
 
-    await Promise.all(promises);
+      unseenMessages[user._id] = unseenCount;
+
+      return {
+        ...user._doc,
+        lastMessage: lastMsg ? (lastMsg.text ? lastMsg.text : "Sent an image") : "Say to Hi.."
+      };
+    }));
 
     res.json({
       success: true,
-      message: "Sidebar user rettrieve successfully",
-      users: filterUsers,
+      message: "Sidebar user retrieved successfully",
+      users: usersWithLastMsg,
       unseenMessages,
     });
   } catch (error) {
@@ -55,7 +67,7 @@ const getMessages = async (req, res) => {
       { senderId: selectedUserId, receiverId: myId },
       { seen: true },
       { new: true },
-        { $set: { seen: true } },
+      { $set: { seen: true } },
     );
 
     res.json({
@@ -113,13 +125,13 @@ const sendMessage = async (req, res) => {
       receiverId
     };
 
-    console.log({messageData});
+    console.log({ messageData });
     const newMessage = await Message.create(messageData);
 
     // emit the new message to the receiver message 
     const receiverSocketId = userSocketMap[receiverId];
-    if(receiverSocketId){
-        io.to(receiverSocketId).emit("newMessage", newMessage)
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMessage)
     }
 
     res.json({
