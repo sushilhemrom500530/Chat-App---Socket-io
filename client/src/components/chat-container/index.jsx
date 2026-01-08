@@ -12,16 +12,31 @@ import { MdCall, MdVideocam } from "react-icons/md";
 export default function ChatContainer() {
   const [formMessage, setFormMessage] = useState("");
   const { authUser, onlineUser } = useContext(AuthContext);
-  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } =
+  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages, typingUsers, sendTypingStatus, isUploading } =
     useContext(ChatContext);
   const scrollEnd = useRef();
+  const typingTimeoutRef = useRef(null);
 
   // handle sending a message
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (formMessage.trim() === "") return;
+    sendTypingStatus(false);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     await sendMessage({ text: formMessage.trim() });
     setFormMessage("");
+  };
+
+  // handle typing detection
+  const handleInputChange = (e) => {
+    setFormMessage(e.target.value);
+    sendTypingStatus(true);
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTypingStatus(false);
+    }, 2000);
   };
   // handle sending a image
   const handleSendImage = async (e) => {
@@ -46,13 +61,21 @@ export default function ChatContainer() {
   // console.log("chat container selected user: ", selectedUser);
 
   return selectedUser ? (
-    <div className="h-full overflow-auto backdrop-blur-lg relative">
+    <div className="h-full flex flex-col backdrop-blur-lg relative overflow-hidden w-full">
       {/* test caller  */}
       {/* <CallUi /> */}
 
       {/*----- chat header -------- */}
-      <div className="flex items-center justify-between gap-3 py-3 px-4 border-b border-stone-500/50">
+      <div className="flex-shrink-0 flex items-center justify-between gap-3 py-3 px-4 border-b border-stone-500/50 bg-[#282142]/40">
         <div className="flex items-center gap-3">
+          <Image
+            onClick={() => setSelectedUser(null)}
+            src={assets.arrow_icon}
+            alt="back"
+            height={30}
+            width={30}
+            className="md:hidden cursor-pointer rotate-180 brightness-200"
+          />
           <div className="relative">
             <Image
               src={selectedUser?.profilePic || assets.avatar_icon}
@@ -63,75 +86,68 @@ export default function ChatContainer() {
             />
           </div>
           <div className="text-white">
-            <p>{selectedUser?.fullName || "Sushil Hemrom"}</p>
+            <p className="text-sm sm:text-base font-medium truncate max-w-[120px] sm:max-w-full">
+              {selectedUser?.fullName || "User"}
+            </p>
             {onlineUser.includes(selectedUser?._id) ? (
-              <p className="text-xs text-green-500">Active Now</p>
+              <p className="text-[10px] sm:text-xs text-green-500">
+                {typingUsers[selectedUser?._id] ? "typing..." : "Active Now"}
+              </p>
             ) : (
-              <p className="text-xs">Offline</p>
+              <p className="text-[10px] sm:text-xs text-gray-400">Offline</p>
             )}
           </div>
         </div>
         <div className="flex items-center gap-2.5">
           <button onClick={() => startCall("audio")} className="cursor-pointer">
-            <MdCall size={24} color="white" />
+            <MdCall size={22} color="white" />
           </button>
           <button onClick={() => startCall("video")} className="cursor-pointer">
-            <MdVideocam size={24} color="white" />
+            <MdVideocam size={22} color="white" />
           </button>
-          <Image
-            onClick={() => setSelectedUser(null)}
-            src={assets.arrow_icon}
-            alt="profile"
-            height={27}
-            width={27}
-            className="md:hidden max-w-7"
-          />
           <Image
             src={assets.help_icon}
             alt="profile"
             height={20}
             width={20}
-            className="max-md:hidden max-w-5"
+            className="max-md:hidden max-w-5 opacity-70"
           />
         </div>
       </div>
       {/*------------ chat area ------------ */}
 
-      <div className="flex flex-col h-[calc(100%-120px)] p-3 pb-6 overflow-scroll">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 custom-scrollbar">
         {messages?.length > 0 &&
           messages?.map((msg, idx) => (
             <div key={idx}>
               <div
                 key={idx}
-                className={`flex items-end justify-end gap-2 ${
-                  msg?.senderId !== authUser?._id && "flex-row-reverse"
-                } `}
+                className={`flex items-end justify-end gap-2 ${msg?.senderId !== authUser?._id && "flex-row-reverse"
+                  } `}
               >
                 {msg?.image ? (
                   <Image
                     src={msg?.image}
                     alt="message_image"
-                    height={230}
-                    width={230}
-                    className="max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8"
+                    height={300}
+                    width={300}
+                    className="max-w-[200px] sm:max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8"
                   />
                 ) : (
                   <div className="mb-0 ">
                     <p
-                      className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg break-all  text-white ${
-                        msg?.senderId === authUser?._id
-                          ? "rounded-br-none bg-violet-500/30"
-                          : "rounded-bl-none bg-purple-500/30"
-                      } `}
+                      className={`p-2 max-w-[75%] sm:max-w-[200px] md:max-w-[250px] text-sm font-light rounded-lg break-all text-white ${msg?.senderId === authUser?._id
+                        ? "rounded-br-none bg-violet-500/30"
+                        : "rounded-bl-none bg-purple-500/30"
+                        } `}
                     >
                       {msg?.text}
                     </p>
                     <p
-                      className={`text-gray-500 text-xs mt-0.5 ${
-                        msg?.senderId === authUser?._id
-                          ? "text-end"
-                          : "text-start"
-                      }`}
+                      className={`text-gray-500 text-xs mt-0.5 ${msg?.senderId === authUser?._id
+                        ? "text-end"
+                        : "text-start"
+                        }`}
                     >
                       {dateFormatter(msg?.createdAt)}
                     </p>
@@ -153,18 +169,35 @@ export default function ChatContainer() {
               </div>
             </div>
           ))}
+        {typingUsers[selectedUser?._id] && (
+          <div className="flex items-end gap-2 mb-4 animate-pulse">
+            <div className="bg-purple-500/20 px-4 py-2 rounded-xl rounded-bl-none flex gap-1 items-center">
+              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
+              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
+              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
+            </div>
+          </div>
+        )}
+        {isUploading && (
+          <div className="flex justify-end mb-4">
+            <div className="bg-violet-500/20 p-3 rounded-lg flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-xs text-white">Sending media...</p>
+            </div>
+          </div>
+        )}
         <div ref={scrollEnd}></div>
       </div>
       {/* ----------- bottom area ------------- */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3">
+      <div className="flex-shrink-0 flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-[#282142]/60 backdrop-blur-md border-t border-white/10">
         <div className="flex-1 flex items-center gap-2 rounded-full px-3 bg-gray-100/12">
           <input
-            onChange={(e) => setFormMessage(e.target.value)}
+            onChange={handleInputChange}
             value={formMessage}
             onKeyDown={(e) => (e.key === "Enter" ? handleSendMessage(e) : null)}
             type="text"
             placeholder="Send a message"
-            className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400"
+            className="flex-1 text-xs sm:text-sm p-2 sm:p-3 border-none rounded-lg outline-none text-white placeholder-gray-400 bg-transparent"
           />
           <input
             onChange={handleSendImage}
