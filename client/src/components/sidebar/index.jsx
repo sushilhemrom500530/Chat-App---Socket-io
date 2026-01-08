@@ -34,7 +34,7 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`bg-[#8185B2]/10 h-full p-4 rounded-r-xl text-white flex flex-col ${selectedUser ? "max-md:hidden" : ""
+      className={`bg-[#8185B2]/10 h-full p-4 text-white flex flex-col ${selectedUser ? "max-md:hidden" : ""
         }`}
     >
       <div className="flex-shrink-0">

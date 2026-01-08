@@ -50,7 +50,9 @@ export default function ChatContainer() {
   };
 
   useEffect(() => {
-    getMessages(selectedUser?._id);
+    if (selectedUser?._id) {
+      getMessages(selectedUser?._id);
+    }
   }, [selectedUser]);
 
   useEffect(() => {

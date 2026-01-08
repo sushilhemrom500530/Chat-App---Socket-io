@@ -52,6 +52,11 @@ const getUserForSidebar = async (req, res) => {
 const getMessages = async (req, res) => {
   try {
     const { id: selectedUserId } = req.params;
+
+    if (!selectedUserId || selectedUserId === "undefined") {
+      return res.status(400).json({ success: false, message: "Invalid Recipient ID" });
+    }
+
     // const myId = "6863654c62efafb423d7083f";
     const myId = req.user._id;
     // console.log({selectedUserId,myId});
