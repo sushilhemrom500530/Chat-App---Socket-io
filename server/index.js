@@ -12,6 +12,11 @@ dotenv.config();
 const port = process.env.PORT || 5000;
 const url = process.env.DB_URL;
 
+if (!url) {
+  console.error("❌ Error: DB_URL is not defined in environment variables. check your .env file.");
+  process.exit(1);
+}
+
 const app = express();
 const server = http.createServer(app); // Create HTTP server from express
 export const io = new Server(server, {
@@ -68,6 +73,23 @@ io.on("connection", (socket) => {
     const targetSocketId = userSocketMap[to];
     if (targetSocketId) {
       io.to(targetSocketId).emit("callEnded");
+    }
+  });
+
+  // Handle typing events
+  socket.on("typing", ({ to, from }) => {
+    // console.log(`Typing event from ${from} to ${to}`);
+    const targetSocketId = userSocketMap[to];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("userTyping", { from });
+    }
+  });
+
+  socket.on("stopTyping", ({ to, from }) => {
+    // console.log(`Stop typing event from ${from} to ${to}`);
+    const targetSocketId = userSocketMap[to];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("userStopTyping", { from });
     }
   });
 

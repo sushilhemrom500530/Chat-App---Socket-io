@@ -22,53 +22,57 @@ const getAllUser = async (req, res) => {
   try {
     const result = await User.find().select("-password -updatedAt");
     res.status(200).json({
-      success:true,
+      success: true,
       message: "Users fetched successfully",
       data: result,
     });
   } catch (error) {
     console.error("Fetch Users Error:", error);
-    res.status(500).json({success:false, message: "Internal Server Error" });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
 // Get single user (for admin/debug/testing)
 const findByUser = async (req, res) => {
   const { userId } = req.params;
+  if (!userId || userId === "undefined") {
+    return res.status(400).json({ success: false, message: "Invalid User ID" });
+  }
   try {
     const result = await User.findById(userId).select("-password");
     res.status(200).json({
-      success:true,
+      success: true,
       message: "User fetched successfully",
       data: result,
     });
   } catch (error) {
     console.error("Fetch Users Error:", error);
-    res.status(500).json({success:false, message: "Internal Server Error" });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
 
 const updateUser = async (req, res) => {
-  const {userId} = req?.params;
+  const { userId } = req?.params;
+
+  if (!userId || userId === "undefined") {
+    return res.status(400).json({ success: false, message: "Invalid User ID" });
+  }
 
   try {
     // Parse JSON string from `data` field
-    const {formValues} = JSON.parse(req.body.data || "{}");
+    const { formValues } = JSON.parse(req.body.data || "{}");
 
     // If file is uploaded, upload to Cloudinary
     if (req.file) {
       const cloudResult = await fileUploader.uploadToCloudinary(req.file)
-      Object.assign(formValues,{profilePic: cloudResult.secure_url})
+      Object.assign(formValues, { profilePic: cloudResult.secure_url })
     }
 
-
-    
     // Find user
     const user = await User.findById(userId);
-        console.log("find data===>",user);
     if (!user) {
-      return res.status(404).json({success:false, message: "User not found!" });
+      return res.status(404).json({ success: false, message: "User not found!" });
     }
     const result = await User.findByIdAndUpdate(
       userId,
@@ -77,13 +81,13 @@ const updateUser = async (req, res) => {
     );
 
     res.status(200).json({
-      success:true,
+      success: true,
       message: "User updated successfully",
       user: result,
     });
   } catch (error) {
     console.error("Update User Error:", error);
-    res.status(500).json({success:false, message: "Internal Server Error" });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -119,20 +123,20 @@ const loginUser = async (req, res) => {
     const token = createToken(user._id);
 
     res.status(200).json({
-      success:true,
+      success: true,
       message: "Login successful",
       user: {
-        id: user._id,
-        name: user.name,
+        _id: user._id,
+        fullName: user.name, // Fixed name/fullName inconsistency
         email: user.email,
         token,
-        profilePic:user.profilePic,
+        profilePic: user.profilePic,
         createdAt: user.createdAt,
       },
     });
   } catch (error) {
     console.error("Login Error:", error);
-    res.status(500).json({success:false, message: "Internal Server Error" });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 // User registration
@@ -178,10 +182,10 @@ const registerUser = async (req, res) => {
     const token = createToken(newUser._id);
 
     res.status(201).json({
-      success:true,
+      success: true,
       message: "User registered successfully!",
       user: {
-        id: newUser?._id,
+        _id: newUser?._id,
         fullName: newUser?.fullName,
         email: newUser?.email,
         bio: newUser?.bio,
@@ -191,7 +195,7 @@ const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Registration Error:", error);
-    res.status(500).json({success:false, message: "Internal Server Error" });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -204,6 +208,6 @@ export const userController = {
 };
 
 // controller to check if user is authenticated
-export const checkAuth = (req,res)=>{
-  res.json({success:true, user:req.user})
+export const checkAuth = (req, res) => {
+  res.json({ success: true, user: req.user })
 }

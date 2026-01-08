@@ -70,6 +70,7 @@ export const AuthProvider = ({ children }) => {
   // update profile
   const updateProfile = async (formValues, imageFile) => {
     const profileData = modifyPayload({ formValues, file: imageFile });
+
     try {
       const { data } = await axios.put(`/api/v1/user/${authUser?._id}`, profileData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -88,32 +89,32 @@ export const AuthProvider = ({ children }) => {
   };
 
   // connect socket
-const connectSocket = (userData) => {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  // console.log("🔗 Trying to connect to:", baseUrl);
+  const connectSocket = (userData) => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    // console.log("🔗 Trying to connect to:", baseUrl);
 
-  if (!userData || socket?.connected) return;
+    if (!userData || socket?.connected) return;
 
-  const newSocket = io(baseUrl, {
-    query: { userId: userData._id },
-    transports: ["websocket"],
-  });
+    const newSocket = io(baseUrl, {
+      query: { userId: userData._id },
+      transports: ["websocket"],
+    });
 
-  newSocket.on("connect", () => {
-    console.log("Socket connected:", newSocket.id);
-  });
+    newSocket.on("connect", () => {
+      console.log("Socket connected:", newSocket.id);
+    });
 
-  newSocket.on("connect_error", (err) => {
-    console.error("Connection Error:", err.message);
-  });
+    newSocket.on("connect_error", (err) => {
+      console.error("Connection Error:", err.message);
+    });
 
-  newSocket.on("getOnlineUsers", (userIds) => {
-    // console.log("Online user IDs:", userIds);
-    setOnlineUser(userIds);
-  });
+    newSocket.on("getOnlineUsers", (userIds) => {
+      // console.log("Online user IDs:", userIds);
+      setOnlineUser(userIds);
+    });
 
-  setSocket(newSocket);
-};
+    setSocket(newSocket);
+  };
 
 
   // get user where find by id
