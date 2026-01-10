@@ -8,7 +8,7 @@ import { areStreamsEqual } from "@/utils/helper";
 export const CallContext = createContext();
 
 export const CallProvider = ({ children }) => {
-  const { socket } = useContext(AuthContext);
+  const { socket, authUser } = useContext(AuthContext);
   const { selectedUser } = useContext(ChatContext);
 
   const [stream, setStream] = useState(null);
@@ -24,6 +24,7 @@ export const CallProvider = ({ children }) => {
   const myVideoRef = useRef();
   const remoteVideoRef = useRef();
   const audioRef = useRef();
+  const pendingCandidates = useRef([]);
 
   useEffect(() => {
     let interval;
@@ -92,6 +93,20 @@ export const CallProvider = ({ children }) => {
         });
       }
     };
+
+  };
+
+  const processPendingCandidates = async () => {
+    if (!peerConnection.current || !peerConnection.current.remoteDescription) return;
+
+    while (pendingCandidates.current.length > 0) {
+      const candidate = pendingCandidates.current.shift();
+      try {
+        await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (e) {
+        console.error("Error adding pending ICE candidate", e);
+      }
+    }
   };
 
   const startCall = async (type = "video") => {
@@ -107,7 +122,11 @@ export const CallProvider = ({ children }) => {
 
     socket.emit("callUser", {
       to: selectedUser._id,
-      from: socket.id,
+      from: authUser._id,
+      userInfo: {
+        fullName: authUser.fullName,
+        profilePic: authUser.profilePic,
+      },
       signal: offer,
       type,
     });
@@ -122,6 +141,7 @@ export const CallProvider = ({ children }) => {
     setupPeerConnection(false, localStream, caller.from);
 
     await peerConnection.current.setRemoteDescription(new RTCSessionDescription(caller.signal));
+    processPendingCandidates();
     const answer = await peerConnection.current.createAnswer();
     await peerConnection.current.setLocalDescription(answer);
 
@@ -159,11 +179,16 @@ export const CallProvider = ({ children }) => {
       setCallAccepted(true);
       setCallStartTime(Date.now());
       await peerConnection.current.setRemoteDescription(new RTCSessionDescription(signal));
+      processPendingCandidates();
     });
 
     socket.on("ice-candidate", async ({ candidate }) => {
       try {
-        await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+        if (peerConnection.current && peerConnection.current.remoteDescription) {
+          await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+        } else {
+          pendingCandidates.current.push(candidate);
+        }
       } catch (e) {
         console.error("Error adding received ICE candidate", e);
       }

@@ -15,6 +15,7 @@ export default function ChatContainer() {
   const { authUser, onlineUser } = useContext(AuthContext);
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages, typingUsers, sendTypingStatus, isUploading } =
     useContext(ChatContext);
+  const { startCall } = useContext(CallContext);
   const scrollEnd = useRef();
   const typingTimeoutRef = useRef(null);
 
@@ -66,7 +67,8 @@ export default function ChatContainer() {
   return selectedUser ? (
     <div className="h-full flex flex-col backdrop-blur-lg relative overflow-hidden w-full">
       {/* test caller  */}
-      {/* <CallUi /> */}
+      {/* test caller  */}
+      <CallUi />
 
       {/*----- chat header -------- */}
       <div className="flex-shrink-0 flex items-center justify-between gap-3 py-3 px-4 border-b border-stone-500/50 bg-[#282142]/40">
@@ -201,15 +203,35 @@ export default function ChatContainer() {
                       } `}
                   >
                     {msg?.image ? (
-                      <Image
-                        src={msg?.image}
-                        alt="message_image"
-                        height={300}
-                        width={300}
-                        className="max-w-[200px] sm:max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8"
-                      />
+                      <div className=" mb-8">
+                        <Image
+                          src={msg?.image}
+                          alt="message_image"
+                          height={300}
+                          width={300}
+                          className="max-w-[200px] sm:max-w-[230px] border border-gray-700 rounded-lg overflow-hidden"
+                        />
+                        <div className={`flex items-center gap-2 justify-between mt-1 `}>
+                          <p
+                            className={`text-gray-500 text-xs mt-0.5 `}
+                          >
+                            {dateFormatter(msg?.createdAt)}
+                          </p>
+                          <Image
+                            src={
+                              msg?.senderId === authUser?._id
+                                ? authUser?.profilePic || assets.avatar_icon
+                                : selectedUser?.profilePic || assets.avatar_icon
+                            }
+                            alt="message_image"
+                            height={0}
+                            width={0}
+                            className="max-w-4 h-4 w-4 rounded-full"
+                          />
+                        </div>
+                      </div>
                     ) : (
-                      <div className="mb-0 ">
+                      <div className="mb-0">
                         <p
                           className={`p-2 max-w-[75%] sm:max-w-[200px] md:max-w-[250px] text-sm font-light rounded-lg break-all text-white ${msg?.senderId === authUser?._id
                             ? "rounded-br-none bg-violet-500/30"
@@ -218,29 +240,27 @@ export default function ChatContainer() {
                         >
                           {msg?.text}
                         </p>
-                        <p
-                          className={`text-gray-500 text-xs mt-0.5 ${msg?.senderId === authUser?._id
-                            ? "text-end"
-                            : "text-start"
-                            }`}
-                        >
-                          {dateFormatter(msg?.createdAt)}
-                        </p>
+                        <div className={`flex items-center justify-between mt-1 gap-2 ${msg?.senderId === authUser?._id ? " " : "flex-row-reverse"}`}>
+                          <p
+                            className={`text-gray-500 text-xs mt-0.5`}
+                          >
+                            {dateFormatter(msg?.createdAt)}
+                          </p>
+                          <Image
+                            src={
+                              msg?.senderId === authUser?._id
+                                ? authUser?.profilePic || assets.avatar_icon
+                                : selectedUser?.profilePic || assets.avatar_icon
+                            }
+                            alt="message_image"
+                            height={0}
+                            width={0}
+                            className="max-w-4 h-4 w-4 rounded-full"
+                          />
+                        </div>
                       </div>
                     )}
-                    <div className="text-center text-xs">
-                      <Image
-                        src={
-                          msg?.senderId === authUser?._id
-                            ? authUser?.profilePic || assets.avatar_icon
-                            : selectedUser?.profilePic || assets.avatar_icon
-                        }
-                        alt="message_image"
-                        height={0}
-                        width={0}
-                        className="max-w-4 h-4 w-4 rounded-full"
-                      />
-                    </div>
+
                   </div>
                 </div>
               ))}
