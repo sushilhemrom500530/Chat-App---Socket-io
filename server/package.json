@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
+    "deploy": "npx vercel",
     "build": "echo 'No build step for backend'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

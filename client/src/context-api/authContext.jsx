@@ -134,8 +134,9 @@ export const AuthProvider = ({ children }) => {
     if (storedToken) {
       axios.defaults.headers.common["token"] = storedToken;
       setToken(storedToken);
+      // Only check auth if we have a token
+      checkAuth();
     }
-    checkAuth();
   }, []);
 
   return (
