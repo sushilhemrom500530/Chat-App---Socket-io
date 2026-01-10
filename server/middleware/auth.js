@@ -5,10 +5,17 @@ dotenv.config();
 
 export const protectedRoutes = async (req, res, next) => {
   try {
-    const token = req?.headers?.token;
+    const authHeader = req.headers.authorization || req?.headers?.token;
+
+    const token =
+      authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : null;
+
+    // const token = req?.headers?.token;
     // console.log("user token:", {token});
     if (!token) {
-      return res.status(401).json({ success: false, message: "Token not found"});
+      return res.status(401).json({ success: false, message: "Token not found" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);

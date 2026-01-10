@@ -19,9 +19,14 @@ if (!url) {
 
 const app = express();
 const server = http.createServer(app); // Create HTTP server from express
+
+const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:3000", "http://localhost:5173", "https://chat-app-socket-io-chi.vercel.app"]; // Add your vercel domain here
+
 export const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // frontend origin
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["token"],
     credentials: true,
   },
 });
@@ -110,7 +115,12 @@ io.on("connection", (socket) => {
 });
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "token"],
+  credentials: true
+}));
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/messages", messageRoutes);
 app.use("/api/v1/auth", authRoutes);
