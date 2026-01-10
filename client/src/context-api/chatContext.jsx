@@ -12,6 +12,10 @@ export const ChatProvider = ({ children }) => {
   const [unseenMessages, setUnseenMessages] = useState({});
   const [typingUsers, setTypingUsers] = useState({}); // { userId: boolean }
   const [isUploading, setIsUploading] = useState(false);
+  const [deleteMessageId, setDeleteMessageId] = useState(null);
+
+  // Messenger-style states
+  const [replyingToMessage, setReplyingToMessage] = useState(null);
 
   const { socket, axios, authUser } = useContext(AuthContext);
 
@@ -51,7 +55,12 @@ export const ChatProvider = ({ children }) => {
 
       // Attach text message if it exists
       if (messageData.text) {
-        formData.append("data", JSON.stringify({ text: messageData.text }));
+        formData.append("data", JSON.stringify({
+          text: messageData.text,
+          type: messageData.type,
+          callDuration: messageData.callDuration,
+          replyTo: replyingToMessage?._id // Include replyTo
+        }));
       }
 
       // Attach image file if it exists
@@ -75,6 +84,10 @@ export const ChatProvider = ({ children }) => {
           return [...prev, data.data];
         });
         getUsers(); // Refresh sidebar to show last message snippet
+
+        // Clear reply state
+        if (replyingToMessage) setReplyingToMessage(null);
+
       } else {
         toast.error(data?.message);
       }
@@ -95,6 +108,45 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
+
+  // delete message
+  const deleteMessage = async (messageId) => {
+    try {
+      const { data } = await axios.put(`/api/v1/messages/delete/${messageId}`);
+      if (data.success) {
+        // Update local state immediately for responsiveness
+        setMessages(prev => prev.map(msg => msg._id === messageId ? { ...msg, isDeleted: true } : msg));
+        toast.success("Message deleted");
+      }
+    } catch (error) {
+      toast.error("Failed to delete message");
+    }
+  };
+
+  // edit message
+  const editMessage = async (messageId, newText) => {
+    try {
+      const { data } = await axios.put(`/api/v1/messages/edit/${messageId}`, { text: newText });
+      if (data.success) {
+        // Update local state immediately
+        setMessages(prev => prev.map(msg => msg._id === messageId ? { ...msg, text: newText, isEdited: true } : msg));
+        toast.success("Message edited");
+      }
+    } catch (error) {
+      toast.error("Failed to edit message");
+    }
+  };
+
+  // react to message
+  const reactToMessage = async (messageId, emoji) => {
+    try {
+      // Optimistic local update could be done here, but socket 'messageUpdated' handles it well
+      await axios.put(`/api/v1/messages/react/${messageId}`, { emoji });
+    } catch (error) {
+      console.error("React error", error);
+      toast.error("Failed to react");
+    }
+  };
 
   // function to subscriber from messages
   const subscribeToMessages = async () => {
@@ -122,6 +174,12 @@ export const ChatProvider = ({ children }) => {
       getUsers(); // Refresh sidebar to show last message snippet
     });
 
+    socket.on("messageUpdated", (updatedMsg) => {
+      setMessages(prev => prev.map(msg => msg._id === updatedMsg._id ? updatedMsg : msg));
+      // Also refresh sidebar if it was the last message
+      getUsers();
+    });
+
     socket.on("userTyping", ({ from }) => {
       setTypingUsers((prev) => ({ ...prev, [from]: true }));
 
@@ -143,6 +201,7 @@ export const ChatProvider = ({ children }) => {
   const unSubscribeToMessages = async () => {
     if (socket) {
       socket.off("newMessage");
+      socket.off("messageUpdated");
       socket.off("userTyping");
       socket.off("userStopTyping");
     }
@@ -166,9 +225,15 @@ export const ChatProvider = ({ children }) => {
         unseenMessages,
         setUnseenMessages,
         getMessages,
+        getMessages,
         typingUsers,
         sendTypingStatus,
-        isUploading
+        isUploading,
+        deleteMessage,
+        editMessage,
+        reactToMessage,
+        replyingToMessage,
+        setReplyingToMessage
       }}
     >
       {children}

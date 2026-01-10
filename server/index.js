@@ -49,13 +49,14 @@ io.on("connection", (socket) => {
   //   });
 
   //  Handle call request
-  socket.on("callUser", ({ to, from, signal, type }) => {
+  socket.on("callUser", ({ to, from, signal, type, userInfo }) => {
     const targetSocketId = userSocketMap[to];
     if (targetSocketId) {
       io.to(targetSocketId).emit("incomingCall", {
         from,
         signal,
         type,
+        userInfo,
       });
     }
   });
@@ -90,6 +91,14 @@ io.on("connection", (socket) => {
     const targetSocketId = userSocketMap[to];
     if (targetSocketId) {
       io.to(targetSocketId).emit("userStopTyping", { from });
+    }
+  });
+
+  // Handle ice-candidate
+  socket.on("ice-candidate", ({ to, candidate }) => {
+    const targetSocketId = userSocketMap[to];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("ice-candidate", { candidate });
     }
   });
 

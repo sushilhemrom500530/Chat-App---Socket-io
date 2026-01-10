@@ -66,7 +66,7 @@ const getMessages = async (req, res) => {
         { senderId: myId, receiverId: selectedUserId },
         { senderId: selectedUserId, receiverId: myId },
       ],
-    });
+    }).populate('replyTo');
 
     await Message.updateMany(
       { senderId: selectedUserId, receiverId: myId },
@@ -113,7 +113,7 @@ const sendMessage = async (req, res) => {
   const senderId = req.user?._id;
   try {
     // Parse JSON string from `data` field
-    const { text } = JSON.parse(req.body.data || "{}");
+    const { text, type, callDuration, replyTo } = JSON.parse(req.body.data || "{}");
 
     let image = undefined;
 
@@ -127,11 +127,15 @@ const sendMessage = async (req, res) => {
       text,
       image,
       senderId,
-      receiverId
+      receiverId,
+      type: type || 'text',
+      callDuration,
+      replyTo
     };
 
     console.log({ messageData });
     const newMessage = await Message.create(messageData);
+    await newMessage.populate('replyTo');
 
     // emit the new message to the receiver message 
     const receiverSocketId = userSocketMap[receiverId];
@@ -149,9 +153,107 @@ const sendMessage = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+// delete message
+const deleteMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const message = await Message.findByIdAndUpdate(
+      id,
+      { isDeleted: true },
+      { new: true }
+    );
+
+    if (message) {
+      // Emit update to receiver (and sender for sync)
+      const receiverSocketId = userSocketMap[message.receiverId];
+      const senderSocketId = userSocketMap[message.senderId];
+
+      if (receiverSocketId) io.to(receiverSocketId).emit("messageUpdated", message);
+      if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", message);
+    }
+
+    res.json({ success: true, message: "Message deleted successfully", data: message });
+  } catch (error) {
+    console.error("Delete Message Error:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+// edit message
+const editMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+
+    const message = await Message.findByIdAndUpdate(
+      id,
+      { text, isEdited: true },
+      { new: true }
+    ).populate('replyTo');
+
+    if (message) {
+      const receiverSocketId = userSocketMap[message.receiverId];
+      const senderSocketId = userSocketMap[message.senderId];
+
+      if (receiverSocketId) io.to(receiverSocketId).emit("messageUpdated", message);
+      if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", message);
+    }
+
+    res.json({ success: true, message: "Message edited successfully", data: message });
+  } catch (error) {
+    console.error("Edit Message Error:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+// react to message
+const reactToMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { emoji } = req.body;
+    const userId = req.user._id;
+
+    const message = await Message.findById(id);
+    if (!message) {
+      return res.status(404).json({ success: false, message: "Message not found" });
+    }
+
+    const existingReactionIndex = message.reactions.findIndex(
+      (r) => r.userId.toString() === userId.toString()
+    );
+
+    if (existingReactionIndex > -1) {
+      if (message.reactions[existingReactionIndex].emoji === emoji) {
+        message.reactions.splice(existingReactionIndex, 1);
+      } else {
+        message.reactions[existingReactionIndex].emoji = emoji;
+      }
+    } else {
+      message.reactions.push({ userId, emoji });
+    }
+
+    await message.save();
+    await message.populate('replyTo');
+
+    const receiverSocketId = userSocketMap[message.receiverId];
+    const senderSocketId = userSocketMap[message.senderId];
+
+    if (receiverSocketId) io.to(receiverSocketId).emit("messageUpdated", message);
+    if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", message);
+
+    res.json({ success: true, message: "Reaction updated", data: message });
+  } catch (error) {
+    console.error("Reaction Error:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
 export const messageController = {
   getUserForSidebar,
   getMessages,
   markMessageAsSeen,
   sendMessage,
+  deleteMessage,
+  editMessage,
+  reactToMessage
 };

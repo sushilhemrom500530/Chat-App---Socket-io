@@ -19,14 +19,41 @@ const messageSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    type: {
+      type: String, // 'text', 'image', 'audio_call', 'video_call'
+      default: 'text',
+    },
+    callDuration: {
+      type: String,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false
+    },
+    isEdited: {
+      type: Boolean,
+      default: false
+    },
+    reactions: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        emoji: {
+          type: String,
+        },
+      },
+    ],
+    replyTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+      default: null,
+    },
     seen: {
       type: Boolean,
-      default:false
+      default: false
     },
-    // bio: {
-    //   type: String,
-    //   required: true
-    // },
   },
   {
     timestamps: true // adds createdAt and updatedAt
