@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import http from "http"; // For creating server
 import { Server } from "socket.io"; // Socket.IO server
+import cookieParser from "cookie-parser";
 import { userRoutes } from "./routes/userRoutes.js";
 import { messageRoutes } from "./routes/messageRoutes.js";
 import { authRoutes } from "./routes/authRoutes.js";
@@ -19,9 +20,15 @@ if (!url) {
 
 const app = express();
 const server = http.createServer(app); // Create HTTP server from express
+
+// "true" allows any origin by reflecting it back, which works with credentials
+const allowedOrigins = true;
+
 export const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // frontend origin
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["token"],
     credentials: true,
   },
 });
@@ -110,7 +117,13 @@ io.on("connection", (socket) => {
 });
 
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "token"],
+  credentials: true
+}));
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/messages", messageRoutes);
 app.use("/api/v1/auth", authRoutes);

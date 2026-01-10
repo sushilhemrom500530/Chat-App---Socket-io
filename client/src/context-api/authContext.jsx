@@ -10,6 +10,20 @@ import Cookies from "js-cookie";
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 axios.defaults.baseURL = baseUrl;
 
+// Add request interceptor to automatically include token from cookies
+axios.interceptors.request.use(
+  (config) => {
+    const token = Cookies.get("token");
+    if (token) {
+      config.headers.token = token;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -128,14 +142,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // on mount
+  // on mount - Check auth if token exists
   useEffect(() => {
     const storedToken = Cookies.get("token");
     if (storedToken) {
-      axios.defaults.headers.common["token"] = storedToken;
       setToken(storedToken);
+      checkAuth();
     }
-    checkAuth();
   }, []);
 
   return (

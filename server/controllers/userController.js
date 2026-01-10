@@ -63,10 +63,14 @@ const updateUser = async (req, res) => {
     // Parse JSON string from `data` field
     const { formValues } = JSON.parse(req.body.data || "{}");
 
+    if (!formValues || Object.keys(formValues).length === 0) {
+      return res.status(400).json({ success: false, message: "No data to update" });
+    }
+
     // If file is uploaded, upload to Cloudinary
     if (req.file) {
-      const cloudResult = await fileUploader.uploadToCloudinary(req.file)
-      Object.assign(formValues, { profilePic: cloudResult.secure_url })
+      const cloudResult = await fileUploader.uploadToCloudinary(req.file);
+      Object.assign(formValues, { profilePic: cloudResult.secure_url });
     }
 
     // Find user
@@ -78,7 +82,7 @@ const updateUser = async (req, res) => {
       userId,
       { $set: formValues },
       { new: true }
-    );
+    ).select("-password");
 
     res.status(200).json({
       success: true,
@@ -87,7 +91,11 @@ const updateUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Update User Error:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? error.stack : undefined
+    });
   }
 };
 
@@ -121,6 +129,14 @@ const loginUser = async (req, res) => {
 
     // Generate JWT
     const token = createToken(user._id);
+
+    // Set token as HTTP cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     res.status(200).json({
       success: true,
@@ -180,6 +196,14 @@ const registerUser = async (req, res) => {
     });
 
     const token = createToken(newUser._id);
+
+    // Set token as HTTP cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     res.status(201).json({
       success: true,
