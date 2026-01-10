@@ -5,21 +5,24 @@ dotenv.config();
 
 export const protectedRoutes = async (req, res, next) => {
   try {
-    const token = req.cookies?.token || req.headers.authorization || req?.headers?.token;
+    // Priority: 1. token header, 2. Authorization header, 3. cookies (for same-origin)
+    let token = req.headers.token || req.headers.authorization;
 
-    // const token =
-    //   authHeader && authHeader.startsWith("Bearer ")
-    //     ? authHeader.split(" ")[1]
-    //     : null;
+    // If Authorization header has Bearer format, extract token
+    if (token && token.startsWith("Bearer ")) {
+      token = token.split(" ")[1];
+    }
 
-    // const token = req?.headers?.token;
-    // console.log("user token:", {token});
+    // Fallback to cookie (for same-origin requests)
+    if (!token) {
+      token = req.cookies?.token;
+    }
+
     if (!token) {
       return res.status(401).json({ success: false, message: "Token not found" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    // console.log("decode user is:", decoded);
 
     const user = await User.findById(decoded?._id).select("-password");
     if (!user) {
