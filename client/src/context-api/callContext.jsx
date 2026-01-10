@@ -9,7 +9,7 @@ export const CallContext = createContext();
 
 export const CallProvider = ({ children }) => {
   const { socket, authUser } = useContext(AuthContext);
-  const { selectedUser } = useContext(ChatContext);
+  const { selectedUser, sendMessage } = useContext(ChatContext);
 
   const [stream, setStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
@@ -163,7 +163,26 @@ export const CallProvider = ({ children }) => {
     setCallType(null);
     setCallStartTime(null);
     setCallDuration("00:00");
-    socket.emit("endCall", { to: caller?.from || selectedUser?._id });
+    const targetId = caller?.from || selectedUser?._id;
+    socket.emit("endCall", { to: targetId });
+
+    // Send Call Log Message if call was accepted and we have a duration
+    if (callAccepted && callStartTime) {
+      const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+      const minutes = String(Math.floor(elapsed / 60)).padStart(2, "0");
+      const seconds = String(elapsed % 60).padStart(2, "0");
+      const durationStr = `${minutes}:${seconds}`;
+
+      // Use timeout to allow state to settle or just fire it
+      const logType = callType === "video" ? "video_call" : "audio_call";
+
+      sendMessage({
+        text: `Ended ${callType} call`, // Fallback text
+        type: logType,
+        callDuration: durationStr,
+        image: null // Explicitly null
+      });
+    }
   };
 
   useEffect(() => {

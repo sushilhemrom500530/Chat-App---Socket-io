@@ -9,6 +9,9 @@ router.get("/users", protectedRoutes, messageController.getUserForSidebar);
 router.get("/:id", protectedRoutes, messageController.getMessages);
 
 router.put("/mark/:id", protectedRoutes, messageController.markMessageAsSeen);
+router.put("/delete/:id", protectedRoutes, messageController.deleteMessage);
+router.put("/edit/:id", protectedRoutes, messageController.editMessage);
+router.put("/react/:id", protectedRoutes, messageController.reactToMessage);
 
 router.post(
   "/sent/:id",

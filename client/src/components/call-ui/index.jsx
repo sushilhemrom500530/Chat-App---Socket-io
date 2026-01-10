@@ -32,7 +32,7 @@ export default function CallUi() {
   } = useContext(CallContext);
 
   const { selectedUser } = useContext(ChatContext);
-  const { authUser } = useContext(AuthContext);
+  const { authUser, onlineUser } = useContext(AuthContext);
 
   const lastStreamRef = useRef(null);
   const didPlayRef = useRef(false);
@@ -40,6 +40,123 @@ export default function CallUi() {
   // Local state for mute toggles
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+
+  // Audio Context Ref
+  const audioContextRef = useRef(null);
+  const oscillatorRef = useRef(null);
+  const gainNodeRef = useRef(null);
+
+  const startRingingSound = () => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const ctx = audioContextRef.current;
+
+      // Create oscillator for "brr-brr" phone ring
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, ctx.currentTime); // A4
+      osc.frequency.setValueAtTime(480, ctx.currentTime + 1); // Switch freq for effect
+
+      // Envelope for ringing pattern (2s on, 4s off)
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime + 1.5);
+      gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 2);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+
+      // Loop the sound manually since oscillator is one-shot
+      oscillatorRef.current = osc;
+      gainNodeRef.current = gain;
+
+      // To make it loop properly we'd need more complex logic or just a simple interval
+      // For now, let's use a simpler repeating beep approach with interval
+    } catch (e) {
+      console.error("Audio Context Error", e);
+    }
+  };
+
+  const stopRingingSound = () => {
+    if (oscillatorRef.current) {
+      try {
+        oscillatorRef.current.stop();
+        oscillatorRef.current.disconnect();
+      } catch (e) { }
+      oscillatorRef.current = null;
+    }
+    if (window.ringingInterval) clearInterval(window.ringingInterval);
+  };
+
+  // Simpler Audio Logic with Tone
+  const playTone = (type) => {
+    stopRingingSound();
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const ctx = audioContextRef.current;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    if (type === 'incoming') {
+      // High pitched warble for incoming
+      osc.frequency.setValueAtTime(600, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(800, ctx.currentTime + 0.1);
+      gain.gain.value = 0.1;
+    } else {
+      // Standard phone ring (440Hz + 480Hz modulation ideally, but simple sine here)
+      osc.frequency.value = 440;
+      gain.gain.value = 0.1;
+    }
+
+    osc.start();
+    oscillatorRef.current = osc;
+    gainNodeRef.current = gain;
+  };
+
+  // Handle Ringing Sounds with Interval
+  useEffect(() => {
+    let interval;
+
+    if (receivingCall && !callAccepted) {
+      // Incoming: Fast repeating tones
+      playTone('incoming');
+      interval = setInterval(() => {
+        playTone('incoming');
+        setTimeout(() => stopRingingSound(), 600);
+      }, 1500); // Ring every 1.5s
+      window.ringingInterval = interval;
+
+    } else if (callType && !receivingCall && !callAccepted) {
+      // Outgoing: Long ring
+      const isUserOnline = onlineUser?.includes(selectedUser?._id);
+      if (isUserOnline) {
+        playTone('outgoing');
+        interval = setInterval(() => {
+          playTone('outgoing');
+          setTimeout(() => stopRingingSound(), 1500);
+        }, 4000); // Standard 4s cycle
+        window.ringingInterval = interval;
+      }
+    } else {
+      stopRingingSound();
+    }
+
+    return () => {
+      stopRingingSound();
+      if (interval) clearInterval(interval);
+    }
+  }, [receivingCall, callAccepted, callType, onlineUser, selectedUser]);
 
   useEffect(() => {
     const audioEl = audioRef.current;
