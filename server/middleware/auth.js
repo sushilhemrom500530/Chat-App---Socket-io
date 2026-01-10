@@ -5,12 +5,12 @@ dotenv.config();
 
 export const protectedRoutes = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization || req?.headers?.token;
+    const token = req.cookies?.token || req.headers.authorization || req?.headers?.token;
 
-    const token =
-      authHeader && authHeader.startsWith("Bearer ")
-        ? authHeader.split(" ")[1]
-        : null;
+    // const token =
+    //   authHeader && authHeader.startsWith("Bearer ")
+    //     ? authHeader.split(" ")[1]
+    //     : null;
 
     // const token = req?.headers?.token;
     // console.log("user token:", {token});

@@ -20,7 +20,8 @@ if (!url) {
 const app = express();
 const server = http.createServer(app); // Create HTTP server from express
 
-const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:3000", "http://localhost:5173", "https://chat-app-socket-io-chi.vercel.app"]; // Add your vercel domain here
+// "true" allows any origin by reflecting it back, which works with credentials
+const allowedOrigins = true;
 
 export const io = new Server(server, {
   cors: {
