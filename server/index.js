@@ -138,3 +138,5 @@ app.get("/api/v1", (req, res) => {
 server.listen(port, () => {
   console.log(`Server Running on Port: ${port}`);
 });
+
+export default app;
