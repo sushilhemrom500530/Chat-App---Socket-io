@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import http from "http"; // For creating server
 import { Server } from "socket.io"; // Socket.IO server
+import cookieParser from "cookie-parser";
 import { userRoutes } from "./routes/userRoutes.js";
 import { messageRoutes } from "./routes/messageRoutes.js";
 import { authRoutes } from "./routes/authRoutes.js";
@@ -116,6 +117,7 @@ io.on("connection", (socket) => {
 });
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors({
   origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "DELETE"],
