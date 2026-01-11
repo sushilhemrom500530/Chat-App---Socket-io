@@ -22,16 +22,36 @@ const app = express();
 const server = http.createServer(app); // Create HTTP server from express
 
 // "true" allows any origin by reflecting it back, which works with credentials
-const allowedOrigins = true;
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  process.env.CLIENT_URL,
+].filter(Boolean).map(url => url.replace(/\/$/, ""));
 
 export const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps)
+      if (!origin) return callback(null, true);
+
+      const normalizedOrigin = origin.replace(/\/$/, "");
+      if (allowedOrigins.includes(normalizedOrigin) || allowedOrigins.includes("*")) {
+        callback(null, true);
+      } else {
+        // For development/debugging, if it's a vercel app, we can allow it
+        if (normalizedOrigin.endsWith(".vercel.app")) {
+          return callback(null, true);
+        }
+        console.warn(`📢 CORS blocked for origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["token"],
+    allowedHeaders: ["token", "Content-Type"],
     credentials: true,
   },
 });
+
 
 // store online users
 export const userSocketMap = {}; // {userId, socketId}
@@ -39,15 +59,17 @@ export const userSocketMap = {}; // {userId, socketId}
 // Socket.IO event or connection handler
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
-  // console.log("A user connected:", userId);
+  console.log("✅ User connected:", userId, "| Socket ID:", socket.id);
 
-  if (userId) userSocketMap[userId] = socket.id;
-  // if (userId) {
-  //   userSocketMap[userId] = socket.id;
-  //   console.log("Updated userSocketMap:", userSocketMap);
-  // }
+  if (userId && userId !== "undefined") {
+    userSocketMap[userId] = socket.id;
+    console.log("📊 Updated userSocketMap:", userSocketMap);
+    console.log("👥 Online users count:", Object.keys(userSocketMap).length);
+  }
 
+  // Broadcast updated online users list to ALL connected clients
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  console.log("📡 Broadcasted online users:", Object.keys(userSocketMap));
 
   //   // Example event
   //   socket.on("message", (data) => {
@@ -110,20 +132,28 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    // console.log("User disconnected:", userId);
+    console.log("❌ User disconnected:", userId);
     delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    console.log("📡 Broadcasted updated online users after disconnect:", Object.keys(userSocketMap));
   });
 });
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin.replace(/\/$/, "")) || allowedOrigins.includes("*") || origin.endsWith(".vercel.app")) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "token"],
+  allowedHeaders: ["Content-Type", "token", "Authorization"],
   credentials: true
 }));
+
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/messages", messageRoutes);
 app.use("/api/v1/auth", authRoutes);
