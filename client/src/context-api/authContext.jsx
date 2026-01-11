@@ -104,28 +104,40 @@ export const AuthProvider = ({ children }) => {
 
   // connect socket
   const connectSocket = (userData) => {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    // console.log("🔗 Trying to connect to:", baseUrl);
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "");
+    console.log("🔗 Attempting to connect socket to:", baseUrl, "for user:", userData._id);
 
-    if (!userData || socket?.connected) return;
+    if (!userData || socket?.connected) {
+      console.log("⚠️ Socket connection skipped:", !userData ? "No user data" : "Already connected");
+      return;
+    }
 
     const newSocket = io(baseUrl, {
+
       query: { userId: userData._id },
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
+      withCredentials: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
+
     newSocket.on("connect", () => {
-      console.log("Socket connected:", newSocket.id);
+      console.log("✅ Socket connected successfully! ID:", newSocket.id);
     });
 
     newSocket.on("connect_error", (err) => {
-      console.error("Connection Error:", err.message);
+      console.error("❌ Socket Connection Error:", err.message);
+      if (err.message === "xhr poll error") {
+        console.error("� Hint: This usually happens if the backend is on Vercel (which is not supported) or if CORS is blocking the connection.");
+      }
     });
 
     newSocket.on("getOnlineUsers", (userIds) => {
-      // console.log("Online user IDs:", userIds);
+      console.log("� Online users update:", userIds);
       setOnlineUser(userIds);
     });
+
 
     setSocket(newSocket);
   };
